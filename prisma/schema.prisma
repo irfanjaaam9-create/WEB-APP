@@ -1,0 +1,232 @@
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model AdminUser {
+  id           String   @id @default(uuid())
+  email        String   @unique
+  passwordHash String
+  name         String
+  role         String   @default("ADMIN")
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
+
+model Lead {
+  id                   String     @id @default(uuid())
+  leadId               String     @unique // e.g. SBZ-2026-001
+  fullName             String
+  companyName          String?
+  email                String
+  whatsApp             String
+  country              String
+  
+  // Product Information
+  productName          String?
+  productUrl           String?
+  imageUrl             String?
+  description          String?
+  quantity             String?
+  targetBudget         String?
+  deliveryDate         String?
+  destinationCountry   String?
+
+  // Specialized Machinery Information
+  machineRequired      String?
+  materialProcessed    String?
+  outputCapacity       String?
+  finishedSpecs        String?
+  siteLocation         String?
+  utilities            String?
+  existingEquipment    String?
+  integrationReqs      String?
+  installationReqs     String?
+  trainingReqs         String?
+  documentationReqs    String?
+
+  // Customization & Service Options
+  serviceRequired      String     @default("Supplier Research") // Supplier Research, Supplier Comparison, Samples, Supplier Call, Negotiation, Machinery Sourcing, Factory Visit, Order Coordination, Other
+  needCustomization    Boolean    @default(false)
+  privateLabeling      Boolean    @default(false)
+  packagingReqs        String?
+  technicalReqs        String?
+  additionalMessage    String?
+
+  // Lead Management Status
+  status               String     @default("NEW") // NEW, CONTACTED, QUALIFIED, PROPOSAL_SENT, PAYMENT_PENDING, IN_PROGRESS, COMPLETED, NOT_QUALIFIED, CLOSED
+  internalNotes        LeadNote[]
+
+  createdAt            DateTime   @default(now())
+  updatedAt            DateTime   @updatedAt
+}
+
+model LeadNote {
+  id        String   @id @default(uuid())
+  leadId    String
+  lead      Lead     @relation(fields: [leadId], references: [id], onDelete: Cascade)
+  content   String
+  author    String   @default("Admin")
+  createdAt DateTime @default(now())
+}
+
+model ProductCategory {
+  id             String    @id @default(uuid())
+  name           String
+  slug           String    @unique
+  description    String?
+  featuredImage  String?
+  seoTitle       String?
+  seoDescription String?
+  products       Product[]
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+}
+
+model Product {
+  id             String          @id @default(uuid())
+  name           String
+  slug           String          @unique
+  categoryId     String
+  category       ProductCategory @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  description    String
+  moq            String?
+  estPriceRange  String?
+  images         String          @default("[]") // JSON string array of image URLs
+  specifications String?         @default("{}") // JSON key-value specs
+  isFeatured     Boolean         @default(false)
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
+}
+
+model MachineryCategory {
+  id             String      @id @default(uuid())
+  name           String
+  slug           String      @unique
+  overview       String
+  applications   String?
+  machineTypes   String?     // JSON or bullet points
+  technicalSpecs String?
+  featuredImage  String?
+  machinery      Machinery[]
+  createdAt      DateTime    @default(now())
+  updatedAt      DateTime    @updatedAt
+}
+
+model Machinery {
+  id             String            @id @default(uuid())
+  name           String
+  slug           String            @unique
+  categoryId     String
+  category       MachineryCategory @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  overview       String
+  applications   String?
+  outputCapacity String?
+  specifications String?           // JSON string
+  images         String            @default("[]") // JSON string array
+  isFeatured     Boolean           @default(false)
+  createdAt      DateTime          @default(now())
+  updatedAt      DateTime          @updatedAt
+}
+
+model ServicePackage {
+  id            String   @id @default(uuid())
+  title         String
+  slug          String   @unique
+  priceUsd      Float?
+  isCustomQuote Boolean  @default(false)
+  priceSuffix   String?  // e.g. "From US$299", "Custom Quote"
+  badge         String?  // e.g. "POPULAR", "STARTER"
+  features      String   @default("[]") // JSON string array of feature bullets
+  ctaText       String   @default("Choose Service")
+  orderIndex    Int      @default(0)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+}
+
+model Project {
+  id                String   @id @default(uuid())
+  title             String
+  slug              String   @unique
+  clientCountry     String
+  productType       String
+  buyerRequirement  String
+  sourcingChallenge String
+  workPerformed     String
+  result            String
+  images            String   @default("[]") // JSON string array
+  videoUrl          String?
+  testimonial       String?
+  isPublished       Boolean  @default(true)
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+}
+
+model Testimonial {
+  id             String   @id @default(uuid())
+  clientName     String
+  clientCompany  String?
+  clientCountry  String
+  rating         Int      @default(5)
+  content        String
+  productSourced String?
+  createdAt      DateTime @default(now())
+}
+
+model FAQ {
+  id         String   @id @default(uuid())
+  question   String
+  answer     String
+  category   String   @default("General") // General, Packages & Pricing, Machinery, Process, Payment & Contract
+  orderIndex Int      @default(0)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+}
+
+model BlogCategory {
+  id        String     @id @default(uuid())
+  name      String
+  slug      String     @unique
+  posts     BlogPost[]
+  createdAt DateTime   @default(now())
+}
+
+model BlogPost {
+  id              String        @id @default(uuid())
+  title           String
+  slug            String        @unique
+  content         String
+  excerpt         String
+  featuredImage   String?
+  categoryId      String?
+  category        BlogCategory? @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+  author          String        @default("Zahid")
+  publishedAt     DateTime      @default(now())
+  metaTitle       String?
+  metaDescription String?
+  tags            String?       @default("[]") // JSON string array
+  isPublished     Boolean       @default(true)
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+}
+
+model Media {
+  id         String   @id @default(uuid())
+  fileName   String
+  fileUrl    String
+  publicId   String?  // Cloudinary public_id
+  fileType   String
+  fileSize   Int      @default(0)
+  uploadedAt DateTime @default(now())
+}
+
+model SiteSetting {
+  id        String   @id @default(uuid())
+  key       String   @unique
+  value     String
+  updatedAt DateTime @updatedAt
+}
