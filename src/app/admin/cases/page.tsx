@@ -21,8 +21,8 @@ export default async function AdminCasesPage() {
         </Link>
       </div>
 
-      <div className="bg-white border border-slate-200 rounded-2xl shadow-sm overflow-hidden">
-        <table className="w-full text-left border-collapse">
+      <div className="bg-white border border-slate-200 rounded-2xl shadow-sm overflow-hidden overflow-x-auto">
+        <table className="w-full text-left border-collapse min-w-[800px]">
           <thead>
             <tr className="bg-slate-50 border-b border-slate-200">
               <th className="py-4 px-6 text-xs font-bold text-slate-500 uppercase tracking-wider">Project Case</th>

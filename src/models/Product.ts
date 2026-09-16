@@ -15,6 +15,7 @@ export interface IProduct extends Document {
   images: IProductImage[];
   brochureUrl?: string;
   isPublished: boolean;
+  isFeatured?: boolean;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -53,6 +54,7 @@ const ProductSchema = new Schema<IProduct>(
     images: [ProductImageSchema],
     brochureUrl: { type: String, default: '' },
     isPublished: { type: Boolean, default: false },
+    isFeatured: { type: Boolean, default: false },
   },
   { timestamps: true }
 );
