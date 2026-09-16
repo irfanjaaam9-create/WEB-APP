@@ -53,6 +53,14 @@ export interface IMachineryItem {
   specifications?: string;
 }
 
+export interface IMachineryCategory {
+  id: string;
+  name: string;
+  slug: string;
+  overview: string;
+  featuredImage?: string;
+}
+
 export interface ISiteSettings extends Document {
   key: 'global';
   logoUrl?: string;
@@ -82,6 +90,7 @@ export interface ISiteSettings extends Document {
   faqs: IFAQItem[];
   servicePackages: IServicePackage[];
   machineryCatalog: IMachineryItem[];
+  machineryCategories: IMachineryCategory[];
   updatedAt: Date;
 }
 
@@ -180,6 +189,7 @@ const SiteSettingsSchema = new Schema<ISiteSettings>(
     faqs: { type: [Object], default: [] },
     servicePackages: { type: [Object], default: [] },
     machineryCatalog: { type: [Object], default: [] },
+    machineryCategories: { type: [Object], default: [] },
   },
   { timestamps: true }
 );

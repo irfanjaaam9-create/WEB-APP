@@ -122,6 +122,7 @@ export async function POST(request: NextRequest) {
       }
       if (resource === 'machinery') {
         if (!body.name || !body.overview || !body.categoryId) return NextResponse.json({ error: 'Name, category, and overview are required' }, { status: 400 });
+        if (!(settings.machineryCategories || []).some((category: any) => category.id === body.categoryId)) return NextResponse.json({ error: 'Machinery category not found' }, { status: 400 });
         settings.machineryCatalog.push({ id: crypto.randomUUID(), ...body });
         await settings.save();
         return NextResponse.json({ success: true });

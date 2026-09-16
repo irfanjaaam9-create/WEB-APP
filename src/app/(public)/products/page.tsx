@@ -4,6 +4,7 @@ import { connectDB } from '@/lib/mongodb';
 import Product from '@/models/Product';
 import ProductCategory from '@/models/ProductCategory';
 import ProductCard from '@/components/public/ProductCard';
+import { getOrCreateSettings } from '@/lib/site-settings';
 
 export const revalidate = 60;
 
@@ -19,6 +20,8 @@ export default async function ProductsPage({ searchParams }: { searchParams: { c
     Product.find(query).sort({ createdAt: -1 }).lean(),
     ProductCategory.find().sort({ name: 1 }).lean(),
   ]);
+  const settings = await getOrCreateSettings();
+  const machineryCategories = settings.machineryCategories || [];
 
   return (
     <div className="bg-slate-50 min-h-screen">
@@ -61,6 +64,8 @@ export default async function ProductsPage({ searchParams }: { searchParams: { c
             </Link>
           ))}
         </div>
+
+        {machineryCategories.length > 0 && <div className="mb-12 rounded-2xl border border-amber-200 bg-amber-50 p-5"><h2 className="mb-3 text-sm font-black uppercase tracking-wider text-slate-900">Machinery Categories</h2><div className="flex flex-wrap gap-2">{machineryCategories.map((category: any) => <Link key={category.id} href={`/machinery/${category.slug}`} className="rounded-full border border-amber-300 bg-white px-4 py-2 text-sm font-semibold text-slate-700 hover:border-amber-500 hover:text-amber-700">{category.name}</Link>)}</div></div>}
 
         {/* Product Grid */}
         {products.length > 0 ? (
