@@ -106,19 +106,19 @@ export default async function HomePage() {
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
             <div>
               <h2 className="text-3xl md:text-4xl lg:text-5xl font-black mb-6 text-white">
-                Reliable Manufacturing & Quality Control
+                {settings.capabilitiesTitle || 'Reliable Manufacturing & Quality Control'}
               </h2>
               <p className="text-lg text-white/80 mb-8 leading-relaxed">
-                ZOY Medical Technology is a professional manufacturer engaged in the research, development, production, sale and service of PSA oxygen generators and hyperbaric oxygen chambers.
+                {settings.capabilitiesBody || 'ZOY Medical Technology is a professional manufacturer engaged in the research, development, production, sale and service of PSA oxygen generators and hyperbaric oxygen chambers.'}
               </p>
               
               <div className="space-y-4 mb-10">
-                {[
+                {(settings.capabilitiesItems?.length ? settings.capabilitiesItems : [
                   'Turnkey Solution for Hospital Oxygen Supply',
                   'CE, ISO9001, ISO13485 Certified',
                   'Strict Pre-shipment Testing',
-                  '24/7 After-sales Support & Remote Assistance'
-                ].map((item, i) => (
+                  '24/7 After-sales Support & Remote Assistance',
+                ]).map((item, i) => (
                   <div key={i} className="flex items-center gap-3">
                     <CheckCircle2 className="w-6 h-6 text-secondary flex-shrink-0" />
                     <span className="font-medium text-lg">{item}</span>
@@ -126,8 +126,8 @@ export default async function HomePage() {
                 ))}
               </div>
 
-              <Link href="/about" className="btn-secondary">
-                Learn More About Us
+              <Link href={settings.capabilitiesCtaLink || '/about'} className="btn-secondary">
+                {settings.capabilitiesCtaText || 'Learn More About Us'}
               </Link>
             </div>
             

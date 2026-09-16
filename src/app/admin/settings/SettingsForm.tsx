@@ -27,6 +27,12 @@ export default function SettingsForm({ initialData }: SettingsFormProps) {
     { label: 'Refund Policy', href: '/refund-policy' },
   ]);
   const [logoUrl, setLogoUrl] = useState(initialData.logoUrl || '');
+  const [capabilitiesItems, setCapabilitiesItems] = useState<string[]>(initialData.capabilitiesItems || [
+    'Turnkey Solution for Hospital Oxygen Supply',
+    'CE, ISO9001, ISO13485 Certified',
+    'Strict Pre-shipment Testing',
+    '24/7 After-sales Support & Remote Assistance',
+  ]);
   const [isUploadingSlide, setIsUploadingSlide] = useState(false);
   const [csrfToken, setCsrfToken] = useState('');
 
@@ -134,6 +140,11 @@ export default function SettingsForm({ initialData }: SettingsFormProps) {
       logoUrl,
       homeIntroTitle: formData.get('homeIntroTitle'),
       homeIntroBody: formData.get('homeIntroBody'),
+      capabilitiesTitle: formData.get('capabilitiesTitle'),
+      capabilitiesBody: formData.get('capabilitiesBody'),
+      capabilitiesItems: capabilitiesItems.filter((item) => item.trim()),
+      capabilitiesCtaText: formData.get('capabilitiesCtaText'),
+      capabilitiesCtaLink: formData.get('capabilitiesCtaLink'),
       contactEmail: formData.get('contactEmail'),
       contactPhone: formData.get('contactPhone'),
       whatsapp: formData.get('whatsapp'),
@@ -213,6 +224,33 @@ export default function SettingsForm({ initialData }: SettingsFormProps) {
             <label className="admin-label mb-2 block">Footer Text</label>
             <input name="footerText" defaultValue={initialData.footerText} className="admin-input" />
           </div>
+        </div>
+      </div>
+
+      {/* Manufacturing & Quality Control */}
+      <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm space-y-6">
+        <h2 className="text-xl font-bold font-heading mb-4 border-b border-slate-100 pb-2">Homepage Manufacturing Section</h2>
+        <div>
+          <label className="admin-label mb-2 block">Section Title</label>
+          <input name="capabilitiesTitle" defaultValue={initialData.capabilitiesTitle} className="admin-input" />
+        </div>
+        <div>
+          <label className="admin-label mb-2 block">Description</label>
+          <textarea name="capabilitiesBody" defaultValue={initialData.capabilitiesBody} rows={4} className="admin-input h-auto" />
+        </div>
+        <div className="space-y-3">
+          <label className="admin-label block">Quality and capability points</label>
+          {capabilitiesItems.map((item, index) => (
+            <div key={index} className="flex gap-2">
+              <input value={item} onChange={(event) => { const next = [...capabilitiesItems]; next[index] = event.target.value; setCapabilitiesItems(next); }} className="admin-input" />
+              <button type="button" onClick={() => setCapabilitiesItems(capabilitiesItems.filter((_, itemIndex) => itemIndex !== index))} className="px-3 text-red-500"><X className="w-4 h-4" /></button>
+            </div>
+          ))}
+          <button type="button" onClick={() => setCapabilitiesItems([...capabilitiesItems, ''])} className="text-sm font-bold text-primary">+ Add point</button>
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div><label className="admin-label mb-2 block">Button Text</label><input name="capabilitiesCtaText" defaultValue={initialData.capabilitiesCtaText} className="admin-input" /></div>
+          <div><label className="admin-label mb-2 block">Button Link</label><input name="capabilitiesCtaLink" defaultValue={initialData.capabilitiesCtaLink} className="admin-input" /></div>
         </div>
       </div>
 

@@ -1,6 +1,6 @@
 'use client';
 
-import React, { Suspense, useState } from 'react';
+import React, { Suspense, useEffect, useState } from 'react';
 import { Mail, Phone, MapPin, Send } from 'lucide-react';
 import { submitInquiry } from '@/actions/inquiries';
 import { useSearchParams } from 'next/navigation';
@@ -18,6 +18,22 @@ function ContactPageContent() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState('');
+  const [settings, setSettings] = useState({
+    companyName: '',
+    contactEmail: '',
+    contactPhone: '',
+    contactPhone2: '',
+    whatsapp: '',
+    address: '',
+    officeHours: '',
+  });
+
+  useEffect(() => {
+    fetch('/api/site-settings')
+      .then((response) => response.json())
+      .then((data) => setSettings((current) => ({ ...current, ...data })))
+      .catch(() => undefined);
+  }, []);
 
   const initialProduct = searchParams.get('product') || searchParams.get('interest') || '';
 
@@ -45,7 +61,7 @@ function ContactPageContent() {
       <div className="bg-white border-b border-slate-200 py-16 md:py-24">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <h1 className="text-4xl md:text-5xl font-black font-heading text-slate-900 mb-6">
-            Contact ZOY Medical Technology
+            Contact {settings.companyName || 'Our Team'}
           </h1>
           <p className="text-lg text-slate-600 max-w-2xl mx-auto">
             Get in touch with our experts for product inquiries, project consultations, or technical support.
@@ -71,7 +87,7 @@ function ContactPageContent() {
                     </div>
                     <div>
                       <h4 className="text-lg font-bold font-heading mb-1 text-slate-200">Headquarters</h4>
-                      <p className="text-slate-400">Hunan Province, China<br/>(Detailed address provided upon inquiry)</p>
+                      <p className="text-slate-400">{settings.address || 'Address available upon inquiry'}</p>
                     </div>
                   </div>
 
@@ -81,8 +97,9 @@ function ContactPageContent() {
                     </div>
                     <div>
                       <h4 className="text-lg font-bold font-heading mb-1 text-slate-200">Phone / WhatsApp</h4>
-                      <p className="text-slate-400">+86 15307600828</p>
-                      <p className="text-slate-400 mt-1 text-sm">Available 24/7 for urgent requests</p>
+                      <p className="text-slate-400">{settings.contactPhone || settings.whatsapp || 'Phone available upon inquiry'}</p>
+                      {settings.contactPhone2 && <p className="text-slate-400">{settings.contactPhone2}</p>}
+                      {settings.officeHours && <p className="text-slate-400 mt-1 text-sm">{settings.officeHours}</p>}
                     </div>
                   </div>
 
@@ -92,7 +109,7 @@ function ContactPageContent() {
                     </div>
                     <div>
                       <h4 className="text-lg font-bold font-heading mb-1 text-slate-200">Email</h4>
-                      <p className="text-slate-400">info@zoy-tech.com</p>
+                      <p className="text-slate-400">{settings.contactEmail || 'Email available upon inquiry'}</p>
                     </div>
                   </div>
                 </div>

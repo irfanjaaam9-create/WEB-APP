@@ -59,6 +59,11 @@ export interface ISiteSettings extends Document {
   heroSlides: IHeroSlide[];
   homeIntroTitle?: string;
   homeIntroBody?: string;
+  capabilitiesTitle?: string;
+  capabilitiesBody?: string;
+  capabilitiesItems: string[];
+  capabilitiesCtaText?: string;
+  capabilitiesCtaLink?: string;
   contactEmail: string;
   contactPhone: string;
   contactPhone2?: string;
@@ -106,6 +111,22 @@ const SiteSettingsSchema = new Schema<ISiteSettings>(
       type: String,
       default: 'We help companies source machinery, industrial systems, and production equipment with verified factories, direct communication, and practical export support.',
     },
+    capabilitiesTitle: { type: String, default: 'Reliable Manufacturing & Quality Control' },
+    capabilitiesBody: {
+      type: String,
+      default: 'ZOY Medical Technology is a professional manufacturer engaged in the research, development, production, sale and service of PSA oxygen generators and hyperbaric oxygen chambers.',
+    },
+    capabilitiesItems: {
+      type: [String],
+      default: [
+        'Turnkey Solution for Hospital Oxygen Supply',
+        'CE, ISO9001, ISO13485 Certified',
+        'Strict Pre-shipment Testing',
+        '24/7 After-sales Support & Remote Assistance',
+      ],
+    },
+    capabilitiesCtaText: { type: String, default: 'Learn More About Us' },
+    capabilitiesCtaLink: { type: String, default: '/about' },
     contactEmail: { type: String, default: 'info@zoy-tech.com' },
     contactPhone: { type: String, default: '+86 15307600828' },
     contactPhone2: { type: String, default: '' },
