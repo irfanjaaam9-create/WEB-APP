@@ -34,6 +34,12 @@ export default function AdminMachineryPage() {
     loadData();
   }, []);
 
+  const deleteMachine = async (id: string) => {
+    if (!window.confirm('Delete this machine model?')) return;
+    const response = await fetch(`/api/admin/machinery?id=${encodeURIComponent(id)}`, { method: 'DELETE' });
+    if (response.ok) loadData();
+  };
+
   const openModal = (catId?: string) => {
     setName('');
     setCategoryId(catId || machineryCategories[0]?.id || '');
@@ -129,6 +135,7 @@ export default function AdminMachineryPage() {
                     <div key={mach.id} className="bg-slate-950 border border-slate-800 rounded-2xl p-4 space-y-2">
                       <div className="flex items-center justify-between">
                         <h4 className="font-bold text-white text-sm">{mach.name}</h4>
+                        <button onClick={() => deleteMachine(mach.id)} className="text-slate-400 hover:text-red-400" title="Delete machine"><Trash2 className="w-4 h-4" /></button>
                         <span className="text-[10px] font-bold bg-amber-500/10 text-amber-400 px-2 py-0.5 rounded-full border border-amber-500/20">
                           {mach.outputCapacity || 'Industrial'}
                         </span>

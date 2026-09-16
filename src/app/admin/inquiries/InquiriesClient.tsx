@@ -1,8 +1,8 @@
 'use client';
 
 import React from 'react';
-import { updateInquiryStatus } from '@/actions/inquiries';
-import { Mail, Phone, Calendar, Building, Package, ExternalLink } from 'lucide-react';
+import { deleteInquiry, updateInquiryStatus } from '@/actions/inquiries';
+import { Mail, Phone, Calendar, Building, Package, Trash2 } from 'lucide-react';
 
 interface InquiriesClientProps {
   inquiries: any[];
@@ -11,6 +11,12 @@ interface InquiriesClientProps {
 export default function InquiriesClient({ inquiries }: InquiriesClientProps) {
   const handleStatusChange = async (id: string, newStatus: 'new' | 'contacted' | 'resolved') => {
     await updateInquiryStatus(id, newStatus);
+  };
+
+  const handleDelete = async (id: string) => {
+    if (!window.confirm('Delete this inquiry?')) return;
+    await deleteInquiry(id);
+    window.location.reload();
   };
 
   return (
@@ -84,6 +90,7 @@ export default function InquiriesClient({ inquiries }: InquiriesClientProps) {
                     <span className="text-sm font-bold text-slate-700">{inq.company}</span>
                   </div>
                 )}
+                <button onClick={() => handleDelete(inq._id)} className="p-2 text-slate-400 hover:text-red-500" title="Delete inquiry"><Trash2 className="w-4 h-4" /></button>
               </div>
 
               <div>

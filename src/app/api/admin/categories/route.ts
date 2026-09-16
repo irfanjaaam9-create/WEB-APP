@@ -81,3 +81,62 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: message }, { status: duplicate ? 409 : 500 });
   }
 }
+
+export async function PUT(request: NextRequest) {
+  try {
+    if (!(await requireAdmin())) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    const body = await request.json();
+    const id = String(body.id || '');
+    const name = String(body.name || '').trim();
+    if (!id || !name) return NextResponse.json({ error: 'Category id and name are required' }, { status: 400 });
+
+    await connectDB();
+    const existing = await ProductCategory.findById(id).lean();
+    if (!existing) return NextResponse.json({ error: 'Category not found' }, { status: 404 });
+    const slug = slugify(name);
+    const category = await ProductCategory.findByIdAndUpdate(
+      id,
+      {
+        name,
+        slug,
+        description: String(body.description || '').trim(),
+        featuredImage: String(body.featuredImage || '').trim(),
+        seoTitle: String(body.seoTitle || '').trim(),
+        seoDescription: String(body.seoDescription || '').trim(),
+      },
+      { new: true, runValidators: true }
+    );
+
+    if (existing.slug !== slug) await Product.updateMany({ category: existing.slug }, { $set: { category: slug } });
+    return NextResponse.json({ success: true, category: { ...category.toObject(), id: category._id.toString() } });
+  } catch (error: unknown) {
+    const duplicate = typeof error === 'object' && error !== null && 'code' in error && error.code === 11000;
+    return NextResponse.json({ error: duplicate ? 'A category with this name already exists' : errorMessage(error, 'Unable to update category') }, { status: duplicate ? 409 : 500 });
+  }
+}
+
+export async function DELETE(request: NextRequest) {
+  try {
+    if (!(await requireAdmin())) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    const id = request.nextUrl.searchParams.get('id');
+    if (!id) return NextResponse.json({ error: 'Category id is required' }, { status: 400 });
+
+    await connectDB();
+    const category = await ProductCategory.findById(id).lean();
+    if (!category) return NextResponse.json({ error: 'Category not found' }, { status: 404 });
+
+    const productCount = await Product.countDocuments({ category: category.slug });
+    if (productCount > 0) return NextResponse.json({ error: 'Move or delete products in this category first' }, { status: 409 });
+
+    await ProductCategory.findByIdAndDelete(id);
+    return NextResponse.json({ success: true });
+  } catch (error: unknown) {
+    return NextResponse.json({ error: errorMessage(error, 'Unable to delete category') }, { status: 500 });
+  }
+}

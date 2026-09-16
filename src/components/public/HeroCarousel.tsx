@@ -14,9 +14,10 @@ interface Slide {
 
 interface HeroCarouselProps {
   slides: Slide[];
+  compact?: boolean;
 }
 
-export default function HeroCarousel({ slides }: HeroCarouselProps) {
+export default function HeroCarousel({ slides, compact = false }: HeroCarouselProps) {
   const [current, setCurrent] = useState(0);
 
   const next = useCallback(() => {
@@ -45,7 +46,7 @@ export default function HeroCarousel({ slides }: HeroCarouselProps) {
   }
 
   return (
-    <div className="relative w-full h-[70vh] min-h-[500px] overflow-hidden bg-slate-900">
+    <div className={`relative w-full overflow-hidden bg-slate-900 ${compact ? 'h-[420px] min-h-0' : 'h-[70vh] min-h-[500px]'}`}>
       <div 
         className="flex transition-transform duration-700 ease-in-out h-full"
         style={{ transform: `translateX(-${current * 100}%)` }}
@@ -63,8 +64,8 @@ export default function HeroCarousel({ slides }: HeroCarouselProps) {
 
             {/* Content */}
             <div className="relative h-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center">
-              <div className="max-w-2xl mt-16 md:mt-24">
-                <h2 className="text-4xl md:text-5xl lg:text-6xl font-heading font-black text-white mb-4 leading-tight">
+              <div className={`max-w-2xl ${compact ? 'mt-8' : 'mt-16 md:mt-24'}`}>
+                <h2 className={`${compact ? 'text-3xl md:text-4xl' : 'text-4xl md:text-5xl lg:text-6xl'} font-heading font-black text-white mb-4 leading-tight`}>
                   {slide.title}
                 </h2>
                 {slide.subtitle && (

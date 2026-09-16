@@ -48,7 +48,7 @@ function mapLead(inquiry: any) {
     serviceRequired: 'Supplier Research',
     targetBudget: '',
     status: String(inquiry.status || 'new').toUpperCase(),
-    internalNotes: [],
+    internalNotes: inquiry.notes || [],
   };
 }
 
@@ -93,7 +93,7 @@ export async function GET(request: NextRequest) {
     if (resource === 'media') {
       const result = await cloudinary.api.resources({ type: 'upload', resource_type: 'image', max_results: 100 });
       const media = result.resources.map((item: any) => ({
-        id: item.asset_id || item.public_id,
+        id: item.public_id,
         fileName: item.public_id.split('/').pop(),
         fileUrl: item.secure_url,
       }));
@@ -156,15 +156,63 @@ export async function PUT(request: NextRequest) {
   try {
     if (!(await isAdmin())) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     const resource = request.nextUrl.pathname.split('/').pop();
-    if (resource !== 'services') return NextResponse.json({ error: 'Unsupported admin resource' }, { status: 400 });
     const body = await request.json();
+    await connectDB();
     const settings = await getSettings();
-    const index = settings.servicePackages.findIndex((item: any) => idFor(item) === String(body.id));
-    if (index < 0) return NextResponse.json({ error: 'Service package not found' }, { status: 404 });
-    settings.servicePackages[index] = { ...settings.servicePackages[index], ...body };
+    const collections: Record<string, string> = { blog: 'blogPosts', machinery: 'machineryCatalog', services: 'servicePackages' };
+    if (resource && collections[resource]) {
+      const items = settings[collections[resource]] || [];
+      const index = items.findIndex((item: any) => idFor(item) === String(body.id));
+      if (index < 0) return NextResponse.json({ error: 'Item not found' }, { status: 404 });
+      items[index] = { ...items[index], ...body, id: idFor(items[index]) };
+      settings[collections[resource]] = items;
+      await settings.save();
+      return NextResponse.json({ success: true, item: serialize(items[index]) });
+    }
+    if (resource === 'projects') {
+      const project = await CaseStudy.findByIdAndUpdate(body.id, {
+        title: body.title,
+        clientName: body.clientCountry || 'Client',
+        location: body.clientCountry || '',
+        productCategory: body.productType || '',
+        excerpt: body.buyerRequirement || '',
+        content: [body.sourcingChallenge, body.workPerformed, body.result].filter(Boolean).join('\n\n'),
+      }, { new: true, runValidators: true });
+      if (!project) return NextResponse.json({ error: 'Project not found' }, { status: 404 });
+      return NextResponse.json({ success: true, project });
+    }
+    return NextResponse.json({ error: 'Unsupported admin resource' }, { status: 400 });
+  } catch (error: unknown) {
+    return NextResponse.json({ error: errorMessage(error, 'Unable to update admin resource') }, { status: 500 });
+  }
+}
+
+export async function DELETE(request: NextRequest) {
+  try {
+    if (!(await isAdmin())) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    const resource = request.nextUrl.pathname.split('/').pop();
+    const id = request.nextUrl.searchParams.get('id');
+    if (!id) return NextResponse.json({ error: 'Item id is required' }, { status: 400 });
+    await connectDB();
+
+    if (resource === 'projects') {
+      const project = await CaseStudy.findByIdAndDelete(id);
+      return project ? NextResponse.json({ success: true }) : NextResponse.json({ error: 'Project not found' }, { status: 404 });
+    }
+    if (resource === 'media') {
+      await cloudinary.uploader.destroy(id);
+      return NextResponse.json({ success: true });
+    }
+    const settings = await getSettings();
+    const collections: Record<string, string> = { blog: 'blogPosts', machinery: 'machineryCatalog', services: 'servicePackages' };
+    if (!resource || !collections[resource]) return NextResponse.json({ error: 'Unsupported admin resource' }, { status: 400 });
+    const items = settings[collections[resource]] || [];
+    const nextItems = items.filter((item: any) => idFor(item) !== id);
+    if (nextItems.length === items.length) return NextResponse.json({ error: 'Item not found' }, { status: 404 });
+    settings[collections[resource]] = nextItems;
     await settings.save();
     return NextResponse.json({ success: true });
   } catch (error: unknown) {
-    return NextResponse.json({ error: errorMessage(error, 'Unable to update admin resource') }, { status: 500 });
+    return NextResponse.json({ error: errorMessage(error, 'Unable to delete admin resource') }, { status: 500 });
   }
 }

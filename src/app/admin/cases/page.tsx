@@ -1,5 +1,6 @@
 import React from 'react';
-import { Trash2, CheckCircle, XCircle } from 'lucide-react';
+import Link from 'next/link';
+import { Plus, Trash2, Edit, CheckCircle, XCircle } from 'lucide-react';
 import { connectDB } from '@/lib/mongodb';
 import CaseStudy from '@/models/CaseStudy';
 import { deleteCaseStudy } from '@/actions/cases';
@@ -14,10 +15,10 @@ export default async function AdminCasesPage() {
     <div>
       <div className="flex items-center justify-between mb-8">
         <h1 className="text-3xl font-black font-heading text-slate-900">Project Cases</h1>
-        {/* We stub the New Case functionality since a full WYSIWYG would be needed for content */}
-        <button className="btn-primary flex items-center gap-2 opacity-50 cursor-not-allowed" title="Requires rich text editor implementation">
+        <Link href="/admin/cases/new" className="btn-primary flex items-center gap-2">
+          <Plus className="w-4 h-4" />
           New Case Study
-        </button>
+        </Link>
       </div>
 
       <div className="bg-white border border-slate-200 rounded-2xl shadow-sm overflow-hidden">
@@ -72,6 +73,9 @@ export default async function AdminCasesPage() {
                   </td>
                   <td className="py-4 px-6 text-right">
                     <div className="flex justify-end gap-2">
+                      <Link href={`/admin/cases/${cs._id}/edit`} className="p-2 text-slate-400 hover:text-primary hover:bg-primary/10 rounded-lg transition-colors">
+                        <Edit className="w-4 h-4" />
+                      </Link>
                       <form action={async () => {
                         'use server';
                         await deleteCaseStudy(cs._id);

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { connectDB } from '@/lib/mongodb';
 import SiteSettings from '@/models/SiteSettings';
 import { getSession } from '@/lib/session';
+import { getOrCreateSettings } from '@/lib/site-settings';
 
 function normalizeFaq(faq: any) {
   if (!faq) return null;
@@ -51,7 +52,7 @@ export async function POST(request: NextRequest) {
     }
 
     await connectDB();
-    const settings = await SiteSettings.findOne({ key: 'global' });
+    const settings = await getOrCreateSettings();
     const existingFaqs = Array.isArray(settings?.faqs) ? settings.faqs.map((item: any) => ({ ...item, id: item.id || item._id?.toString?.() || undefined })) : [];
 
     existingFaqs.push(faq);
@@ -90,7 +91,7 @@ export async function PUT(request: NextRequest) {
     }
 
     await connectDB();
-    const settings = await SiteSettings.findOne({ key: 'global' });
+    const settings = await getOrCreateSettings();
     const existingFaqs = Array.isArray(settings?.faqs) ? settings.faqs : [];
     const updatedFaqs = existingFaqs.map((item: any) => {
       const itemId = item.id || item._id?.toString?.();
@@ -119,7 +120,7 @@ export async function DELETE(request: NextRequest) {
     }
 
     await connectDB();
-    const settings = await SiteSettings.findOne({ key: 'global' });
+    const settings = await getOrCreateSettings();
     const existingFaqs = Array.isArray(settings?.faqs) ? settings.faqs : [];
     settings.faqs = existingFaqs.filter((item: any) => {
       const itemId = item.id || item._id?.toString?.();

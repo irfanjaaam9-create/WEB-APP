@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { FolderGit2, Plus, Loader2, X } from 'lucide-react';
+import { FolderGit2, Plus, Trash2, Loader2, X } from 'lucide-react';
 
 export default function AdminProjectsPage() {
   const [projects, setProjects] = useState<any[]>([]);
@@ -31,6 +31,12 @@ export default function AdminProjectsPage() {
   useEffect(() => {
     loadProjects();
   }, []);
+
+  const deleteProject = async (id: string) => {
+    if (!window.confirm('Delete this project?')) return;
+    const response = await fetch(`/api/admin/projects?id=${encodeURIComponent(id)}`, { method: 'DELETE' });
+    if (response.ok) loadProjects();
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -94,7 +100,7 @@ export default function AdminProjectsPage() {
                   {proj.clientCountry} • {proj.productType}
                 </span>
               </div>
-              <h3 className="font-bold text-white text-base">{proj.title}</h3>
+              <div className="flex items-center justify-between gap-3"><h3 className="font-bold text-white text-base">{proj.title}</h3><button onClick={() => deleteProject(proj.id)} className="text-slate-400 hover:text-red-400" title="Delete project"><Trash2 className="w-4 h-4" /></button></div>
               <p className="text-xs text-slate-400 line-clamp-3">{proj.buyerRequirement}</p>
             </div>
           ))}

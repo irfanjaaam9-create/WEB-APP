@@ -54,6 +54,12 @@ export default function AdminMediaPage() {
     setTimeout(() => setCopiedId(null), 2000);
   };
 
+  const deleteMedia = async (id: string) => {
+    if (!window.confirm('Delete this media asset?')) return;
+    const response = await fetch(`/api/admin/media?id=${encodeURIComponent(id)}`, { method: 'DELETE' });
+    if (response.ok) loadMedia();
+  };
+
   return (
     <div className="space-y-6 max-w-7xl mx-auto">
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 bg-slate-900 border border-slate-800 p-6 rounded-3xl">
@@ -94,13 +100,7 @@ export default function AdminMediaPage() {
               </div>
               <div className="px-1 flex items-center justify-between">
                 <span className="text-[10px] text-slate-400 truncate max-w-[100px]">{item.fileName}</span>
-                <button
-                  onClick={() => copyToClipboard(item.fileUrl, item.id)}
-                  className="p-1 rounded bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs"
-                  title="Copy Cloudinary URL"
-                >
-                  {copiedId === item.id ? <CheckCircle className="w-3 h-3 text-emerald-400" /> : <Copy className="w-3 h-3" />}
-                </button>
+                <div className="flex gap-1"><button onClick={() => copyToClipboard(item.fileUrl, item.id)} className="p-1 rounded bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs" title="Copy Cloudinary URL">{copiedId === item.id ? <CheckCircle className="w-3 h-3 text-emerald-400" /> : <Copy className="w-3 h-3" />}</button><button onClick={() => deleteMedia(item.id)} className="p-1 rounded bg-red-500/10 text-red-400" title="Delete media"><Trash2 className="w-3 h-3" /></button></div>
               </div>
             </div>
           ))}

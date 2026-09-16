@@ -20,7 +20,7 @@ function mapLead(inquiry: any) {
     productName: inquiry.productRef || '',
     serviceRequired: 'Supplier Research',
     status: String(inquiry.status || 'new').toUpperCase(),
-    internalNotes: [],
+    internalNotes: inquiry.notes || [],
   };
 }
 
@@ -49,7 +49,18 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
     NOT_QUALIFIED: 'resolved',
     CLOSED: 'resolved',
   };
-  const inquiry = await Inquiry.findByIdAndUpdate(id, { status: statusMap[String(body.status)] || 'new' }, { new: true }).lean();
+  const update: Record<string, unknown> = { status: statusMap[String(body.status)] || 'new' };
+  if (String(body.noteContent || '').trim()) {
+    update.$push = {
+      notes: {
+        id: crypto.randomUUID(),
+        content: String(body.noteContent).trim(),
+        author: 'Admin',
+        createdAt: new Date(),
+      },
+    };
+  }
+  const inquiry = await Inquiry.findByIdAndUpdate(id, update, { new: true }).lean();
   if (!inquiry) return NextResponse.json({ error: 'Lead not found' }, { status: 404 });
   return NextResponse.json({ lead: mapLead(inquiry) });
 }

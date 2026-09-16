@@ -43,3 +43,15 @@ export async function updateInquiryStatus(id, status, payload = {}) {
     return { success: false, error: error.message || 'Unable to update inquiry status' };
   }
 }
+
+export async function deleteInquiry(id, payload = {}) {
+  try {
+    await requireAdminSession(payload);
+    await connectDB();
+    await Inquiry.findByIdAndDelete(id);
+    revalidatePath('/admin/inquiries');
+    return { success: true };
+  } catch (error) {
+    return { success: false, error: error instanceof Error ? error.message : 'Unable to delete inquiry' };
+  }
+}

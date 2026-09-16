@@ -8,6 +8,12 @@ export interface IInquiry extends Document {
   productRef?: string;
   message: string;
   status: 'new' | 'contacted' | 'resolved';
+  notes: {
+    id: string;
+    content: string;
+    author: string;
+    createdAt: Date;
+  }[];
   createdAt: Date;
   updatedAt: Date;
 }
@@ -30,6 +36,17 @@ const InquirySchema = new Schema<IInquiry>(
       type: String,
       enum: ['new', 'contacted', 'resolved'],
       default: 'new',
+    },
+    notes: {
+      type: [
+        {
+          id: { type: String, required: true },
+          content: { type: String, required: true },
+          author: { type: String, default: 'Admin' },
+          createdAt: { type: Date, default: Date.now },
+        },
+      ],
+      default: [],
     },
   },
   { timestamps: true }

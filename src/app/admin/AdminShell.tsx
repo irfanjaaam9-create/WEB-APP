@@ -2,6 +2,7 @@
 
 import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
+import { usePathname } from 'next/navigation';
 import { LogOut } from 'lucide-react';
 import { logoutAdmin } from '@/actions/auth';
 import { adminNavItems } from '@/lib/admin-menu';
@@ -14,6 +15,7 @@ export default function AdminShell({
   children: React.ReactNode;
   session?: { role?: 'admin' | 'editor' | null } | null;
 }) {
+  const pathname = usePathname();
   const [csrfToken, setCsrfToken] = useState('');
 
   useEffect(() => {
@@ -35,7 +37,12 @@ export default function AdminShell({
                 <Link
                   key={item.name}
                   href={item.href}
-                  className="flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-slate-800 hover:text-white transition-colors"
+                  prefetch={false}
+                  className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-colors ${
+                    pathname === item.href || pathname.startsWith(`${item.href}/`)
+                      ? 'bg-primary text-white shadow-lg shadow-primary/20'
+                      : 'hover:bg-slate-800 hover:text-white'
+                  }`}
                 >
                   <Icon className="w-5 h-5 flex-shrink-0" />
                   <span className="font-medium text-sm">{item.name}</span>

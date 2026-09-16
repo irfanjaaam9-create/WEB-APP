@@ -241,6 +241,11 @@ export default async function HomePage() {
           )}
         </div>
       </section>
+
+      {/* 7. Final CTA Slider */}
+      <section className="bg-slate-950 py-10">
+        <HeroCarousel compact slides={JSON.parse(JSON.stringify(heroSlides))} />
+      </section>
     </div>
   );
 }
