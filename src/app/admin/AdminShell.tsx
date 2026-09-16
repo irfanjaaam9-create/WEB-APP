@@ -26,7 +26,7 @@ export default function AdminShell({
     <div className="flex h-screen bg-slate-50 font-sans">
       <div className="w-64 bg-slate-900 text-slate-300 flex flex-col flex-shrink-0">
         <div className="h-16 flex items-center px-6 bg-slate-950 border-b border-slate-800">
-          <div className="font-heading font-black text-xl text-white">ZOY Admin</div>
+          <div className="font-heading font-black text-xl text-white">ZEE Admin</div>
         </div>
 
         <div className="flex-1 overflow-y-auto py-6">
