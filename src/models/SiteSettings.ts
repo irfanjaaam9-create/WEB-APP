@@ -15,6 +15,16 @@ export interface INavItem {
   href: string;
 }
 
+export interface IHomeMetric {
+  value: string;
+  label: string;
+}
+
+export interface ICapabilityCard {
+  title: string;
+  body: string;
+}
+
 export interface IArticle {
   id?: string;
   title: string;
@@ -72,6 +82,9 @@ export interface ISiteSettings extends Document {
   capabilitiesItems: string[];
   capabilitiesCtaText?: string;
   capabilitiesCtaLink?: string;
+  homeMetrics: IHomeMetric[];
+  capabilitiesImage?: string;
+  capabilityCards: ICapabilityCard[];
   contactEmail: string;
   contactPhone: string;
   contactPhone2?: string;
@@ -136,6 +149,31 @@ const SiteSettingsSchema = new Schema<ISiteSettings>(
     },
     capabilitiesCtaText: { type: String, default: 'Learn More About Us' },
     capabilitiesCtaLink: { type: String, default: '/about' },
+    homeMetrics: {
+      type: [
+        {
+          value: { type: String, required: true },
+          label: { type: String, required: true },
+        },
+      ],
+      default: [
+        { value: '10+', label: 'Years Experience' },
+        { value: '2000m²', label: 'Production Workshop' },
+        { value: '10+', label: 'Patents' },
+        { value: '30+', label: 'Countries Exported' },
+      ],
+    },
+    capabilitiesImage: { type: String, default: 'https://images.unsplash.com/photo-1581092335397-9583eb92d232?auto=format&fit=crop&q=80&w=600' },
+    capabilityCards: {
+      type: [
+        { title: { type: String, required: true }, body: { type: String, required: true } },
+      ],
+      default: [
+        { title: 'Modern Facility', body: 'Standardized production lines ensuring high-volume capacity.' },
+        { title: 'Quality Assured', body: 'Every unit undergoes 72-hour continuous testing before delivery.' },
+        { title: 'Certifications', body: 'Complying with international medical device standards.' },
+      ],
+    },
     contactEmail: { type: String, default: 'info@zoy-tech.com' },
     contactPhone: { type: String, default: '+86 15307600828' },
     contactPhone2: { type: String, default: '' },

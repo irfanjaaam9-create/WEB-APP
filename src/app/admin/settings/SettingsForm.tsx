@@ -33,6 +33,18 @@ export default function SettingsForm({ initialData }: SettingsFormProps) {
     'Strict Pre-shipment Testing',
     '24/7 After-sales Support & Remote Assistance',
   ]);
+  const [homeMetrics, setHomeMetrics] = useState<{ value: string; label: string }[]>(initialData.homeMetrics || [
+    { value: '10+', label: 'Years Experience' },
+    { value: '2000m²', label: 'Production Workshop' },
+    { value: '10+', label: 'Patents' },
+    { value: '30+', label: 'Countries Exported' },
+  ]);
+  const [capabilitiesImage, setCapabilitiesImage] = useState(initialData.capabilitiesImage || '');
+  const [capabilityCards, setCapabilityCards] = useState<{ title: string; body: string }[]>(initialData.capabilityCards || [
+    { title: 'Modern Facility', body: 'Standardized production lines ensuring high-volume capacity.' },
+    { title: 'Quality Assured', body: 'Every unit undergoes 72-hour continuous testing before delivery.' },
+    { title: 'Certifications', body: 'Complying with international medical device standards.' },
+  ]);
   const [isUploadingSlide, setIsUploadingSlide] = useState(false);
   const [csrfToken, setCsrfToken] = useState('');
 
@@ -40,10 +52,10 @@ export default function SettingsForm({ initialData }: SettingsFormProps) {
     setCsrfToken(ensureCsrfToken());
   }, []);
 
-  const handleUpload = async (file: File, target: 'logo' | 'slide') => {
+  const handleUpload = async (file: File, target: 'logo' | 'slide' | 'capability') => {
     const formData = new FormData();
     formData.append('file', file);
-    formData.append('folder', target === 'logo' ? 'settings' : 'site');
+    formData.append('folder', target === 'logo' ? 'settings' : target === 'capability' ? 'settings' : 'site');
 
     const res = await fetch('/api/upload', { method: 'POST', body: formData });
     const data = await res.json();
@@ -54,6 +66,8 @@ export default function SettingsForm({ initialData }: SettingsFormProps) {
 
     if (target === 'logo') {
       setLogoUrl(data.url);
+    } else if (target === 'capability') {
+      setCapabilitiesImage(data.url);
     } else {
       setHeroSlides((current) => [...current, {
         imageUrl: data.url,
@@ -87,6 +101,17 @@ export default function SettingsForm({ initialData }: SettingsFormProps) {
 
     try {
       await handleUpload(file, 'logo');
+    } catch (err) {
+      alert(err instanceof Error ? err.message : 'Upload failed');
+    }
+    e.target.value = '';
+  };
+
+  const handleCapabilitiesImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    try {
+      await handleUpload(file, 'capability');
     } catch (err) {
       alert(err instanceof Error ? err.message : 'Upload failed');
     }
@@ -145,6 +170,9 @@ export default function SettingsForm({ initialData }: SettingsFormProps) {
       capabilitiesItems: capabilitiesItems.filter((item) => item.trim()),
       capabilitiesCtaText: formData.get('capabilitiesCtaText'),
       capabilitiesCtaLink: formData.get('capabilitiesCtaLink'),
+      homeMetrics: homeMetrics.filter((metric) => metric.value.trim() && metric.label.trim()),
+      capabilitiesImage,
+      capabilityCards: capabilityCards.filter((card) => card.title.trim() && card.body.trim()),
       contactEmail: formData.get('contactEmail'),
       contactPhone: formData.get('contactPhone'),
       whatsapp: formData.get('whatsapp'),
@@ -252,6 +280,36 @@ export default function SettingsForm({ initialData }: SettingsFormProps) {
           <div><label className="admin-label mb-2 block">Button Text</label><input name="capabilitiesCtaText" defaultValue={initialData.capabilitiesCtaText} className="admin-input" /></div>
           <div><label className="admin-label mb-2 block">Button Link</label><input name="capabilitiesCtaLink" defaultValue={initialData.capabilitiesCtaLink} className="admin-input" /></div>
         </div>
+        <div className="space-y-3 border-t border-slate-100 pt-5">
+          <label className="admin-label block">Facility cards</label>
+          {capabilityCards.map((card, index) => (
+            <div key={index} className="grid grid-cols-1 md:grid-cols-2 gap-3">
+              <input value={card.title} onChange={(event) => { const next = [...capabilityCards]; next[index] = { ...next[index], title: event.target.value }; setCapabilityCards(next); }} className="admin-input" placeholder="Card title" />
+              <div className="flex gap-2"><input value={card.body} onChange={(event) => { const next = [...capabilityCards]; next[index] = { ...next[index], body: event.target.value }; setCapabilityCards(next); }} className="admin-input" placeholder="Card description" /><button type="button" onClick={() => setCapabilityCards(capabilityCards.filter((_, itemIndex) => itemIndex !== index))} className="px-2 text-red-500"><X className="w-4 h-4" /></button></div>
+            </div>
+          ))}
+          <button type="button" onClick={() => setCapabilityCards([...capabilityCards, { title: '', body: '' }])} className="text-sm font-bold text-primary">+ Add card</button>
+        </div>
+        <div className="border-t border-slate-100 pt-5">
+          <label className="admin-label mb-2 block">Facility image</label>
+          <div className="flex items-center gap-4"><img src={capabilitiesImage} alt="Facility preview" className="h-24 w-36 rounded-xl object-cover border border-slate-200" /><label className="btn-primary text-sm h-10 px-4 cursor-pointer inline-flex items-center gap-2"><Upload className="w-4 h-4" /> Upload image<input type="file" accept="image/*" onChange={handleCapabilitiesImageUpload} className="hidden" /></label></div>
+        </div>
+      </div>
+
+      {/* Homepage Metrics */}
+      <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm space-y-6">
+        <h2 className="text-xl font-bold font-heading mb-4 border-b border-slate-100 pb-2">Homepage Metrics</h2>
+        <p className="text-sm text-slate-500">Customize the four statistics shown below the homepage hero slider.</p>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {homeMetrics.map((metric, index) => (
+            <div key={index} className="flex gap-2">
+              <input value={metric.value} onChange={(event) => { const next = [...homeMetrics]; next[index] = { ...next[index], value: event.target.value }; setHomeMetrics(next); }} className="admin-input w-1/3" placeholder="10+" />
+              <input value={metric.label} onChange={(event) => { const next = [...homeMetrics]; next[index] = { ...next[index], label: event.target.value }; setHomeMetrics(next); }} className="admin-input flex-1" placeholder="Years Experience" />
+              <button type="button" onClick={() => setHomeMetrics(homeMetrics.filter((_, itemIndex) => itemIndex !== index))} className="px-2 text-red-500"><X className="w-4 h-4" /></button>
+            </div>
+          ))}
+        </div>
+        <button type="button" onClick={() => setHomeMetrics([...homeMetrics, { value: '', label: '' }])} className="text-sm font-bold text-primary">+ Add metric</button>
       </div>
 
       {/* Contact Info */}

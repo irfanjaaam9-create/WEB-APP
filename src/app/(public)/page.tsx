@@ -48,22 +48,17 @@ export default async function HomePage() {
       <div className="bg-white border-b border-slate-200">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 md:py-12">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-8 divide-x divide-slate-100">
-            <div className="text-center px-4">
-              <div className="text-4xl md:text-5xl font-heading font-black text-primary mb-2">10+</div>
-              <div className="text-sm font-bold text-slate-500 uppercase tracking-wider">Years Experience</div>
-            </div>
-            <div className="text-center px-4">
-              <div className="text-4xl md:text-5xl font-heading font-black text-primary mb-2">2000<span className="text-2xl">m²</span></div>
-              <div className="text-sm font-bold text-slate-500 uppercase tracking-wider">Production Workshop</div>
-            </div>
-            <div className="text-center px-4">
-              <div className="text-4xl md:text-5xl font-heading font-black text-primary mb-2">10+</div>
-              <div className="text-sm font-bold text-slate-500 uppercase tracking-wider">Patents</div>
-            </div>
-            <div className="text-center px-4">
-              <div className="text-4xl md:text-5xl font-heading font-black text-primary mb-2">30+</div>
-              <div className="text-sm font-bold text-slate-500 uppercase tracking-wider">Countries Exported</div>
-            </div>
+            {(settings.homeMetrics?.length ? settings.homeMetrics : [
+              { value: '10+', label: 'Years Experience' },
+              { value: '2000m²', label: 'Production Workshop' },
+              { value: '10+', label: 'Patents' },
+              { value: '30+', label: 'Countries Exported' },
+            ]).map((metric: any) => (
+              <div key={metric.label} className="text-center px-4">
+                <div className="text-4xl md:text-5xl font-heading font-black text-primary mb-2">{metric.value}</div>
+                <div className="text-sm font-bold text-slate-500 uppercase tracking-wider">{metric.label}</div>
+              </div>
+            ))}
           </div>
         </div>
       </div>
@@ -135,23 +130,23 @@ export default async function HomePage() {
               <div className="space-y-4 pt-8">
                 <div className="bg-white/10 rounded-2xl p-6 backdrop-blur-sm border border-white/20">
                   <Factory className="w-10 h-10 text-secondary mb-4" />
-                  <h3 className="text-xl font-bold text-white mb-2 font-heading">Modern Facility</h3>
-                  <p className="text-white/70 text-sm">Standardized production lines ensuring high-volume capacity.</p>
+                  <h3 className="text-xl font-bold text-white mb-2 font-heading">{settings.capabilityCards?.[0]?.title || 'Modern Facility'}</h3>
+                  <p className="text-white/70 text-sm">{settings.capabilityCards?.[0]?.body || 'Standardized production lines ensuring high-volume capacity.'}</p>
                 </div>
                 <div className="bg-white/10 rounded-2xl p-6 backdrop-blur-sm border border-white/20">
                   <ShieldCheck className="w-10 h-10 text-secondary mb-4" />
-                  <h3 className="text-xl font-bold text-white mb-2 font-heading">Quality Assured</h3>
-                  <p className="text-white/70 text-sm">Every unit undergoes 72-hour continuous testing before delivery.</p>
+                  <h3 className="text-xl font-bold text-white mb-2 font-heading">{settings.capabilityCards?.[1]?.title || 'Quality Assured'}</h3>
+                  <p className="text-white/70 text-sm">{settings.capabilityCards?.[1]?.body || 'Every unit undergoes 72-hour continuous testing before delivery.'}</p>
                 </div>
               </div>
               <div className="space-y-4 pb-8">
                 <div className="bg-white/10 rounded-2xl p-6 backdrop-blur-sm border border-white/20">
                   <Award className="w-10 h-10 text-secondary mb-4" />
-                  <h3 className="text-xl font-bold text-white mb-2 font-heading">Certifications</h3>
-                  <p className="text-white/70 text-sm">Complying with international medical device standards.</p>
+                  <h3 className="text-xl font-bold text-white mb-2 font-heading">{settings.capabilityCards?.[2]?.title || 'Certifications'}</h3>
+                  <p className="text-white/70 text-sm">{settings.capabilityCards?.[2]?.body || 'Complying with international medical device standards.'}</p>
                 </div>
                 <div className="rounded-2xl overflow-hidden h-64 relative">
-                  <img src="https://images.unsplash.com/photo-1581092335397-9583eb92d232?auto=format&fit=crop&q=80&w=600" alt="Factory" className="absolute inset-0 w-full h-full object-cover" />
+                  <img src={settings.capabilitiesImage || 'https://images.unsplash.com/photo-1581092335397-9583eb92d232?auto=format&fit=crop&q=80&w=600'} alt="Factory" className="absolute inset-0 w-full h-full object-cover" />
                 </div>
               </div>
             </div>
