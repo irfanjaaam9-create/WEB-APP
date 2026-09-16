@@ -6,8 +6,8 @@ const inter = Inter({ subsets: ['latin'], variable: '--font-sans' });
 const oswald = Oswald({ subsets: ['latin'], variable: '--font-heading' });
 
 export const metadata: Metadata = {
-  title: 'ZOY Medical Technology',
-  description: 'Dedicated to Oxygen Generation For 10+ Years. Medical PSA oxygen generators and oxygen chambers.',
+  title: 'Sourcing By ZEE',
+  description: 'Dedicated to build and supply medical machinery for the last 10 years.',
 };
 
 export default function RootLayout({
