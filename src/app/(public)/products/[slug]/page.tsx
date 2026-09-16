@@ -30,8 +30,8 @@ export default async function ProductDetailPage({ params }: { params: { slug: st
   }
 
   return (
-    <div className="min-h-screen bg-[#f7f6f3] text-slate-800">
-      <div className="border-b border-slate-200 bg-white/90 backdrop-blur-sm">
+    <div className="min-h-screen bg-gradient-to-b from-slate-50 to-slate-100/80 text-slate-800">
+      <div className="border-b border-slate-200/60 bg-white/60 backdrop-blur-md sticky top-0 z-10">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-4">
           <nav className="flex flex-wrap items-center text-sm font-medium text-slate-500">
             <Link href="/" className="transition-colors hover:text-stone-900">Home</Link>
@@ -46,7 +46,7 @@ export default async function ProductDetailPage({ params }: { params: { slug: st
       </div>
 
       <main className="mx-auto max-w-7xl px-4 py-8 sm:px-6 sm:py-10 lg:px-8 lg:py-12">
-        <article className="overflow-hidden rounded-[28px] border border-slate-200 bg-white shadow-[0_20px_60px_rgba(15,23,42,0.06)]">
+        <article className="overflow-hidden rounded-[32px] border border-slate-200/60 bg-white/80 backdrop-blur-xl shadow-[0_8px_30px_rgb(0,0,0,0.04)] transition-all duration-300 hover:shadow-[0_8px_40px_rgb(0,0,0,0.08)]">
           <div className="grid grid-cols-1 xl:grid-cols-[1.08fr_0.92fr]">
             <div className="bg-slate-100/80 p-4 sm:p-6 lg:p-8 xl:border-r xl:border-slate-200">
               <div className="rounded-[24px] border border-slate-200 bg-white p-3 shadow-sm sm:p-4">
@@ -85,7 +85,7 @@ export default async function ProductDetailPage({ params }: { params: { slug: st
                 )}
               </div>
 
-              <h1 className="text-3xl font-black leading-tight text-slate-900 sm:text-4xl lg:text-[2.75rem] lg:leading-[1.1]">
+              <h1 className="text-3xl font-black tracking-tight leading-tight text-slate-900 sm:text-4xl lg:text-[3rem] lg:leading-[1.05]">
                 {product.title}
               </h1>
 
@@ -108,7 +108,7 @@ export default async function ProductDetailPage({ params }: { params: { slug: st
               )}
 
               <div className="mt-8 flex flex-col gap-3 border-t border-slate-200 pt-6 sm:flex-row">
-                <Link href={`/contact?product=${product.slug}`} className="btn-primary w-full justify-center sm:w-auto">
+                <Link href={`/contact?product=${product.slug}`} className="btn-primary w-full justify-center sm:w-auto shadow-lg shadow-stone-900/20 hover:-translate-y-0.5 transition-all">
                   Inquire Now
                 </Link>
 
@@ -117,7 +117,7 @@ export default async function ProductDetailPage({ params }: { params: { slug: st
                     href={product.brochureUrl}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="btn-outline inline-flex w-full items-center justify-center gap-2 sm:w-auto"
+                    className="btn-outline inline-flex w-full items-center justify-center gap-2 sm:w-auto hover:-translate-y-0.5 transition-all bg-white"
                   >
                     <FileText className="h-4 w-4" />
                     Download Brochure
@@ -129,7 +129,7 @@ export default async function ProductDetailPage({ params }: { params: { slug: st
         </article>
 
         {Object.keys(specsObj).length > 0 && (
-          <section className="mt-10 rounded-[28px] border border-slate-200 bg-white p-5 shadow-[0_18px_50px_rgba(15,23,42,0.04)] sm:p-7 lg:p-10">
+          <section className="mt-12 rounded-[32px] border border-slate-200/60 bg-white/80 backdrop-blur-xl p-6 shadow-[0_8px_30px_rgb(0,0,0,0.04)] sm:p-8 lg:p-12">
             <h2 className="mb-6 border-l-4 border-amber-500 pl-4 text-2xl font-black text-slate-900 sm:text-3xl">
               Technical Specifications
             </h2>
