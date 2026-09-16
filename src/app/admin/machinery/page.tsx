@@ -70,8 +70,23 @@ export default function AdminMachineryPage() {
 
   const saveCategory = async (event: React.FormEvent) => {
     event.preventDefault();
-    const response = await fetch('/api/admin/machinery-categories', { method: editingCategoryId ? 'PUT' : 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id: editingCategoryId, name: categoryName, overview: categoryOverview }) });
-    if (response.ok) { setCategoryName(''); setCategoryOverview(''); setCategoryModalOpen(false); loadData(); }
+    const response = await fetch('/api/admin/machinery-categories', {
+      method: editingCategoryId ? 'PUT' : 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id: editingCategoryId, name: categoryName, overview: categoryOverview }),
+    });
+
+    if (response.ok) {
+      setCategoryName('');
+      setCategoryOverview('');
+      setEditingCategoryId(null);
+      setCategoryModalOpen(false);
+      loadData();
+      return;
+    }
+
+    const data = await response.json().catch(() => ({}));
+    alert(data.error || 'Unable to save category');
   };
 
   const editCategory = (category: any) => {
@@ -110,10 +125,22 @@ export default function AdminMachineryPage() {
 
       if (res.ok) {
         setModalOpen(false);
+        setEditingId(null);
+        setName('');
+        setCategoryId(machineryCategories[0]?.id || '');
+        setOverview('');
+        setApplications('');
+        setOutputCapacity('');
+        setSpecifications('');
         loadData();
+        return;
       }
+
+      const data = await res.json().catch(() => ({}));
+      alert(data.error || 'Unable to save machine');
     } catch (err) {
       console.error(err);
+      alert('Unable to save machine');
     } finally {
       setSubmitting(false);
     }

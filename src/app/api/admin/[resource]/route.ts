@@ -33,6 +33,12 @@ function idFor(item: any) {
   return String(raw);
 }
 
+function matchesId(item: any, id: string) {
+  const itemId = idFor(item);
+  if (!itemId && !id) return true;
+  return itemId === id || String(item?._id ?? '') === id || String(item?.id ?? '') === id;
+}
+
 function serialize(item: any) {
   const id = idFor(item);
   return id ? { ...item, id } : { ...item };
@@ -66,10 +72,12 @@ export async function GET(request: NextRequest) {
       if (resource === 'blog') return NextResponse.json({ posts: (settings.blogPosts || []).map(serialize) });
       if (resource === 'services') return NextResponse.json({ services: (settings.servicePackages || []).map(serialize) });
 
+      const categoryMap = new Map((settings.machineryCategories || []).map((category: any) => [String(category.id), category]));
       const groups = new Map<string, any>();
       for (const item of settings.machineryCatalog || []) {
-        const categoryId = item.categoryId || 'general';
-        if (!groups.has(categoryId)) groups.set(categoryId, { id: categoryId, name: categoryId === 'general' ? 'General Machinery' : categoryId, overview: '', machinery: [] });
+        const categoryId = String(item.categoryId || 'general');
+        const category = categoryMap.get(categoryId) || { id: categoryId, name: categoryId === 'general' ? 'General Machinery' : categoryId, overview: '' };
+        if (!groups.has(categoryId)) groups.set(categoryId, { id: category.id, name: category.name || (categoryId === 'general' ? 'General Machinery' : categoryId), overview: category.overview || '', machinery: [] });
         groups.get(categoryId).machinery.push(serialize(item));
       }
       return NextResponse.json({ machineryCategories: Array.from(groups.values()) });
@@ -125,8 +133,9 @@ export async function POST(request: NextRequest) {
       }
       if (resource === 'machinery') {
         if (!body.name || !body.overview || !body.categoryId) return NextResponse.json({ error: 'Name, category, and overview are required' }, { status: 400 });
-        if (!(settings.machineryCategories || []).some((category: any) => category.id === body.categoryId)) return NextResponse.json({ error: 'Machinery category not found' }, { status: 400 });
-        settings.machineryCatalog.push({ id: crypto.randomUUID(), ...body });
+        const categoryExists = (settings.machineryCategories || []).some((category: any) => String(category.id) === String(body.categoryId));
+        if (!categoryExists) return NextResponse.json({ error: 'Machinery category not found' }, { status: 400 });
+        settings.machineryCatalog.push({ id: crypto.randomUUID(), ...body, categoryId: String(body.categoryId) });
         await settings.save();
         return NextResponse.json({ success: true });
       }
@@ -167,10 +176,14 @@ export async function PUT(request: NextRequest) {
     if (resource && collections[resource]) {
       const items = settings[collections[resource]] || [];
       const targetId = String(body.id ?? '');
-      const index = items.findIndex((item: any) => idFor(item) === targetId);
+      const index = items.findIndex((item: any) => matchesId(item, targetId));
       if (index < 0) return NextResponse.json({ error: 'Item not found' }, { status: 404 });
+      if (resource === 'machinery') {
+        const categoryExists = (settings.machineryCategories || []).some((category: any) => String(category.id) === String(body.categoryId));
+        if (!body.categoryId || !categoryExists) return NextResponse.json({ error: 'Machinery category not found' }, { status: 400 });
+      }
       const currentId = idFor(items[index]);
-      items[index] = { ...items[index], ...body, id: currentId || body.id || crypto.randomUUID() };
+      items[index] = { ...items[index], ...body, id: currentId || body.id || crypto.randomUUID(), categoryId: body.categoryId ? String(body.categoryId) : items[index].categoryId };
       settings[collections[resource]] = items;
       await settings.save();
       return NextResponse.json({ success: true, item: serialize(items[index]) });
@@ -213,7 +226,7 @@ export async function DELETE(request: NextRequest) {
     const collections: Record<string, string> = { blog: 'blogPosts', machinery: 'machineryCatalog', services: 'servicePackages' };
     if (!resource || !collections[resource]) return NextResponse.json({ error: 'Unsupported admin resource' }, { status: 400 });
     const items = settings[collections[resource]] || [];
-    const nextItems = items.filter((item: any) => idFor(item) !== id && String(item?.id ?? item?._id ?? '') !== id);
+    const nextItems = items.filter((item: any) => !matchesId(item, id));
     if (nextItems.length === items.length) return NextResponse.json({ error: 'Item not found' }, { status: 404 });
     settings[collections[resource]] = nextItems;
     await settings.save();
