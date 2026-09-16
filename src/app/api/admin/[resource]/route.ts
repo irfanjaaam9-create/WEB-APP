@@ -69,6 +69,20 @@ export async function GET(request: NextRequest) {
 
     if (resource === 'blog' || resource === 'machinery' || resource === 'services') {
       const settings = await getSettings();
+      let needsSave = false;
+      const fixIds = (col: string) => {
+        if (settings[col as keyof typeof settings]) {
+          (settings[col as keyof typeof settings] as any[]).forEach((item: any) => {
+            if (!item.id) { item.id = crypto.randomUUID(); needsSave = true; }
+          });
+          if (needsSave) settings.markModified(col);
+        }
+      };
+      fixIds('blogPosts');
+      fixIds('machineryCatalog');
+      fixIds('servicePackages');
+      if (needsSave) await settings.save();
+
       if (resource === 'blog') return NextResponse.json({ posts: (settings.blogPosts || []).map(serialize) });
       if (resource === 'services') return NextResponse.json({ services: (settings.servicePackages || []).map(serialize) });
 
@@ -127,7 +141,7 @@ export async function POST(request: NextRequest) {
       const settings = await getSettings();
       if (resource === 'blog') {
         if (!body.title || !body.content) return NextResponse.json({ error: 'Title and content are required' }, { status: 400 });
-        settings.blogPosts.push({ id: crypto.randomUUID(), ...body, publishedAt: new Date() });
+        settings.blogPosts.push({ ...body, id: crypto.randomUUID(), publishedAt: new Date() });
         settings.markModified('blogPosts');
         await settings.save();
         return NextResponse.json({ success: true });
@@ -136,12 +150,12 @@ export async function POST(request: NextRequest) {
         if (!body.name || !body.overview || !body.categoryId) return NextResponse.json({ error: 'Name, category, and overview are required' }, { status: 400 });
         const categoryExists = (settings.machineryCategories || []).some((category: any) => String(category.id) === String(body.categoryId));
         if (!categoryExists) return NextResponse.json({ error: 'Machinery category not found' }, { status: 400 });
-        settings.machineryCatalog.push({ id: crypto.randomUUID(), ...body, categoryId: String(body.categoryId) });
+        settings.machineryCatalog.push({ ...body, id: crypto.randomUUID(), categoryId: String(body.categoryId) });
         settings.markModified('machineryCatalog');
         await settings.save();
         return NextResponse.json({ success: true });
       }
-      settings.servicePackages.push({ id: crypto.randomUUID(), ...body });
+      settings.servicePackages.push({ ...body, id: crypto.randomUUID() });
       settings.markModified('servicePackages');
       await settings.save();
       return NextResponse.json({ success: true });

@@ -38,7 +38,7 @@ export default function AdminShell({
     <div className="min-h-screen bg-slate-50 font-sans text-slate-900">
       <div className="relative flex min-h-screen md:flex-row">
         <aside
-          className={`fixed inset-y-0 left-0 z-40 w-72 transform bg-slate-900 text-slate-300 transition-transform duration-200 ease-in-out lg:static lg:translate-x-0 lg:w-64 ${
+          className={`fixed inset-y-0 left-0 z-40 w-64 transform bg-slate-900 text-slate-300 transition-transform duration-300 ease-in-out ${
             sidebarOpen ? 'translate-x-0' : '-translate-x-full'
           }`}
         >
@@ -46,7 +46,7 @@ export default function AdminShell({
             <div className="font-heading text-xl font-black text-white">ZEE Admin</div>
             <button
               type="button"
-              className="rounded-lg p-1.5 text-slate-300 hover:bg-slate-800 hover:text-white lg:hidden"
+              className="rounded-lg p-1.5 text-slate-300 hover:bg-slate-800 hover:text-white"
               onClick={() => setSidebarOpen(false)}
               aria-label="Close menu"
             >
@@ -97,14 +97,14 @@ export default function AdminShell({
           />
         )}
 
-        <div className="flex min-h-screen w-full flex-1 flex-col overflow-hidden">
+        <div className={`flex min-h-screen w-full flex-1 flex-col overflow-hidden transition-all duration-300 ${sidebarOpen ? 'lg:ml-64' : ''}`}>
           <header className="sticky top-0 z-20 flex h-16 flex-shrink-0 items-center justify-between border-b border-slate-200 bg-white px-4 shadow-sm md:px-8">
             <div className="flex items-center gap-3">
               <button
                 type="button"
-                className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-slate-200 text-slate-700 hover:bg-slate-100 lg:hidden"
-                onClick={() => setSidebarOpen(true)}
-                aria-label="Open menu"
+                className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-slate-200 text-slate-700 hover:bg-slate-100"
+                onClick={() => setSidebarOpen(!sidebarOpen)}
+                aria-label="Toggle menu"
               >
                 <Menu className="h-5 w-5" />
               </button>
