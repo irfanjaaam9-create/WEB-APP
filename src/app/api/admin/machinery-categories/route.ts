@@ -32,7 +32,9 @@ export async function GET() {
   }
   const categories = site.machineryCategories.map((category: any) => ({
     ...category,
-    machinery: (site.machineryCatalog || []).filter((machine: any) => machine.categoryId === category.id),
+    machinery: (site.machineryCatalog || [])
+      .filter((machine: any) => machine.categoryId === category.id)
+      .map((machine: any) => ({ ...machine, id: String(machine.id || machine._id) })),
   }));
   return NextResponse.json({ categories });
 }

@@ -43,6 +43,7 @@ export default function AdminMachineryPage() {
     if (!window.confirm('Delete this machine model?')) return;
     const response = await fetch(`/api/admin/machinery?id=${encodeURIComponent(id)}`, { method: 'DELETE' });
     if (response.ok) loadData();
+    else { const data = await response.json(); alert(data.error || 'Unable to delete machine'); }
   };
 
   const openModal = (catId?: string) => {
