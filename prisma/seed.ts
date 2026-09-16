@@ -3,25 +3,38 @@ import bcrypt from 'bcryptjs';
 
 const prisma = new PrismaClient();
 
+function generateSecureToken(length = 16): string {
+  const bytes = new Uint8Array(length);
+  crypto.getRandomValues(bytes);
+  return Array.from(bytes, (byte) => byte.toString(16).padStart(2, '0')).join('').slice(0, length);
+}
+
 async function main() {
   console.log('Seeding database for Source by Zahid...');
 
+  const siteHost = process.env.NEXT_PUBLIC_SITE_URL
+    ? new URL(process.env.NEXT_PUBLIC_SITE_URL).hostname
+    : 'localhost';
+  const generatedEmail = process.env.ADMIN_EMAIL || `admin-${generateSecureToken(8)}@${siteHost}`;
+  const generatedPassword = process.env.ADMIN_PASSWORD || generateSecureToken(18);
+
   // 1. Create Default Admin User
   const existingAdmin = await prisma.adminUser.findUnique({
-    where: { email: 'admin@sourcebyzahid.com' },
+    where: { email: generatedEmail },
   });
 
   if (!existingAdmin) {
-    const passwordHash = await bcrypt.hash('AdminPassword123!', 10);
+    const passwordHash = await bcrypt.hash(generatedPassword, 10);
     await prisma.adminUser.create({
       data: {
         name: 'Zahid',
-        email: 'admin@sourcebyzahid.com',
+        email: generatedEmail,
         passwordHash,
         role: 'ADMIN',
       },
     });
-    console.log('Created Admin User: admin@sourcebyzahid.com');
+    console.log(`Created Admin User: ${generatedEmail}`);
+    console.log(`Generated admin seed password: ${generatedPassword}`);
   }
 
   // 2. Initial Site Settings

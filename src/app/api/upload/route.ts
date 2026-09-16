@@ -1,42 +1,40 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { prisma } from '@/lib/prisma';
 import { uploadToCloudinary } from '@/lib/cloudinary';
+import { getSession } from '@/lib/session';
+import { uploadFolders } from '@/lib/admin-menu';
 
 export async function POST(req: NextRequest) {
   try {
-    const formData = await req.formData();
-    const file = formData.get('file') as File | null;
+    const session = await getSession();
+    if (!session || session.role !== 'admin') {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
 
-    if (!file) {
+    const formData = await req.formData();
+    const file = formData.get('file');
+    const rawFolder = String(formData.get('folder') || 'zoytech').trim();
+    const folder = uploadFolders.includes(rawFolder) ? rawFolder : 'zoytech';
+
+    if (!(file instanceof File)) {
       return NextResponse.json({ error: 'No file provided' }, { status: 400 });
     }
 
-    // Read file buffer
+    if (!file.type.startsWith('image/')) {
+      return NextResponse.json({ error: 'Only image uploads are allowed.' }, { status: 400 });
+    }
+
+    if (file.size > 8 * 1024 * 1024) {
+      return NextResponse.json({ error: 'Image must be smaller than 8MB.' }, { status: 400 });
+    }
+
     const arrayBuffer = await file.arrayBuffer();
     const buffer = Buffer.from(arrayBuffer);
+    const result = await uploadToCloudinary(buffer, folder);
 
-    // Upload to Cloudinary
-    const result = await uploadToCloudinary(buffer, 'source-by-zahid-media');
-
-    // Save to Media DB
-    const mediaRecord = await prisma.media.create({
-      data: {
-        fileName: file.name,
-        fileUrl: result.url,
-        publicId: result.public_id,
-        fileType: file.type || result.format,
-        fileSize: result.bytes || file.size,
-      },
-    });
-
-    return NextResponse.json({
-      success: true,
-      url: result.url,
-      public_id: result.public_id,
-      media: mediaRecord,
-    });
-  } catch (error: any) {
-    console.error('Cloudinary Upload Error:', error);
-    return NextResponse.json({ error: 'Failed to upload image to Cloudinary: ' + error.message }, { status: 500 });
+    return NextResponse.json({ success: true, ...result, folder });
+  } catch (error) {
+    const message = error instanceof Error ? error.message : 'Upload failed';
+    console.error('[Upload API] Error:', message);
+    return NextResponse.json({ error: message }, { status: 500 });
   }
 }

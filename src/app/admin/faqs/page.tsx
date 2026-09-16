@@ -1,12 +1,13 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { HelpCircle, Plus, Loader2, X } from 'lucide-react';
+import { HelpCircle, Plus, Loader2, X, Pencil, Trash2 } from 'lucide-react';
 
 export default function AdminFaqsPage() {
   const [faqs, setFaqs] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [modalOpen, setModalOpen] = useState(false);
+  const [editingId, setEditingId] = useState<string | null>(null);
   const [question, setQuestion] = useState('');
   const [answer, setAnswer] = useState('');
   const [category, setCategory] = useState('General');
@@ -28,25 +29,66 @@ export default function AdminFaqsPage() {
     loadFaqs();
   }, []);
 
+  const resetForm = () => {
+    setEditingId(null);
+    setQuestion('');
+    setAnswer('');
+    setCategory('General');
+  };
+
+  const openCreateModal = () => {
+    resetForm();
+    setModalOpen(true);
+  };
+
+  const openEditModal = (faq: any) => {
+    setEditingId(faq.id || faq._id || null);
+    setQuestion(faq.question || '');
+    setAnswer(faq.answer || '');
+    setCategory(faq.category || 'General');
+    setModalOpen(true);
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!question || !answer) return;
 
     try {
+      const method = editingId ? 'PUT' : 'POST';
       const res = await fetch('/api/admin/faqs', {
-        method: 'POST',
+        method,
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ question, answer, category }),
+        body: JSON.stringify({ id: editingId, question, answer, category }),
       });
 
-      if (res.ok) {
-        setQuestion('');
-        setAnswer('');
-        setModalOpen(false);
-        loadFaqs();
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data.error || 'Unable to save FAQ');
       }
+
+      resetForm();
+      setModalOpen(false);
+      loadFaqs();
     } catch (err) {
       console.error(err);
+      alert(err instanceof Error ? err.message : 'Unable to save FAQ');
+    }
+  };
+
+  const handleDelete = async (faqId: string) => {
+    if (!faqId) return;
+    if (!window.confirm('Delete this FAQ permanently?')) return;
+
+    try {
+      const res = await fetch(`/api/admin/faqs?id=${encodeURIComponent(faqId)}`, { method: 'DELETE' });
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data.error || 'Unable to delete FAQ');
+      }
+      loadFaqs();
+    } catch (err) {
+      console.error(err);
+      alert(err instanceof Error ? err.message : 'Unable to delete FAQ');
     }
   };
 
@@ -62,7 +104,7 @@ export default function AdminFaqsPage() {
         </div>
 
         <button
-          onClick={() => setModalOpen(true)}
+          onClick={openCreateModal}
           className="bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold px-4 py-2.5 rounded-xl text-xs flex items-center gap-2 transition-all shrink-0"
         >
           <Plus className="w-4 h-4" />
@@ -77,25 +119,40 @@ export default function AdminFaqsPage() {
         </div>
       ) : (
         <div className="space-y-3">
-          {faqs.map((faq) => (
-            <div key={faq.id} className="bg-slate-900 border border-slate-800 rounded-2xl p-5 space-y-1">
-              <span className="text-[10px] bg-slate-800 text-emerald-400 px-2 py-0.5 rounded-md font-semibold">
-                {faq.category}
-              </span>
-              <h3 className="font-bold text-white text-sm mt-1">{faq.question}</h3>
-              <p className="text-xs text-slate-300">{faq.answer}</p>
-            </div>
-          ))}
+          {faqs.map((faq) => {
+            const faqId = faq.id || faq._id;
+            return (
+              <div key={faqId} className="bg-slate-900 border border-slate-800 rounded-2xl p-5 space-y-3">
+                <div className="flex items-start justify-between gap-4">
+                  <div className="flex-1">
+                    <span className="text-[10px] bg-slate-800 text-emerald-400 px-2 py-0.5 rounded-md font-semibold">
+                      {faq.category}
+                    </span>
+                    <h3 className="font-bold text-white text-sm mt-2">{faq.question}</h3>
+                    <p className="text-xs text-slate-300 mt-1">{faq.answer}</p>
+                  </div>
+
+                  <div className="flex items-center gap-2">
+                    <button onClick={() => openEditModal(faq)} className="p-2 rounded-lg bg-slate-800 text-slate-200 hover:text-white hover:bg-slate-700">
+                      <Pencil className="w-4 h-4" />
+                    </button>
+                    <button onClick={() => handleDelete(faqId)} className="p-2 rounded-lg bg-red-500/10 text-red-400 hover:bg-red-500/20">
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  </div>
+                </div>
+              </div>
+            );
+          })}
         </div>
       )}
 
-      {/* Modal */}
       {modalOpen && (
         <div className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4">
           <div className="bg-slate-900 border border-slate-800 rounded-3xl w-full max-w-lg p-6 space-y-4">
             <div className="flex items-center justify-between border-b border-slate-800 pb-3">
-              <h3 className="text-base font-bold text-white">Add Frequently Asked Question</h3>
-              <button onClick={() => setModalOpen(false)} className="text-slate-400 hover:text-white">
+              <h3 className="text-base font-bold text-white">{editingId ? 'Edit FAQ' : 'Add Frequently Asked Question'}</h3>
+              <button onClick={() => { resetForm(); setModalOpen(false); }} className="text-slate-400 hover:text-white">
                 <X className="w-5 h-5" />
               </button>
             </div>
@@ -140,11 +197,11 @@ export default function AdminFaqsPage() {
               </div>
 
               <div className="pt-3 border-t border-slate-800 flex justify-end gap-2">
-                <button type="button" onClick={() => setModalOpen(false)} className="px-4 py-2 text-xs text-slate-400">
+                <button type="button" onClick={() => { resetForm(); setModalOpen(false); }} className="px-4 py-2 text-xs text-slate-400">
                   Cancel
                 </button>
                 <button type="submit" className="bg-emerald-500 text-slate-950 font-bold px-5 py-2 rounded-xl text-xs">
-                  Save FAQ
+                  {editingId ? 'Update FAQ' : 'Save FAQ'}
                 </button>
               </div>
             </form>

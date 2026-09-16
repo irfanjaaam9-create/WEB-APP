@@ -1,116 +1,87 @@
 import React from 'react';
 import Link from 'next/link';
-import { prisma } from '@/lib/prisma';
-import { Package, ArrowRight, Star, Send } from 'lucide-react';
+import { connectDB } from '@/lib/mongodb';
+import Product from '@/models/Product';
+import ProductCategory from '@/models/ProductCategory';
+import ProductCard from '@/components/public/ProductCard';
 
 export const revalidate = 60;
 
-export default async function ProductsCatalogPage() {
+export default async function ProductsPage({ searchParams }: { searchParams: { category?: string } }) {
+  await connectDB();
+
+  const query: any = { isPublished: true };
+  if (searchParams.category && searchParams.category !== 'all') {
+    query.category = searchParams.category;
+  }
+
   const [products, categories] = await Promise.all([
-    prisma.product.findMany({ include: { category: true }, orderBy: { createdAt: 'desc' } }),
-    prisma.productCategory.findMany({ include: { _count: { select: { products: true } } } }),
+    Product.find(query).sort({ createdAt: -1 }).lean(),
+    ProductCategory.find().sort({ name: 1 }).lean(),
   ]);
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 space-y-16 font-sans">
-      <div className="text-center max-w-3xl mx-auto space-y-4">
-        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-slate-900 border border-slate-800 text-emerald-400 text-xs font-bold uppercase tracking-widest">
-          CMS Driven Product Catalog
+    <div className="bg-slate-50 min-h-screen">
+      {/* Page Header */}
+      <div className="bg-white border-b border-slate-200 py-16 md:py-24">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+          <h1 className="text-4xl md:text-5xl font-black font-heading text-slate-900 mb-6">
+            Our Products
+          </h1>
+          <p className="text-lg text-slate-600 max-w-2xl mx-auto">
+            Explore our comprehensive range of high-quality oxygen generation systems designed for medical and industrial applications.
+          </p>
         </div>
-        <h1 className="text-3xl sm:text-5xl font-black text-white tracking-tight">
-          Products We Source From China
-        </h1>
-        <p className="text-slate-300 text-sm sm:text-base leading-relaxed">
-          Browse sample products and categories we research and coordinate for international buyers. Can’t find your specific item? Tell us what you need and we will check feasibility.
-        </p>
       </div>
 
-      {/* Categories Bar */}
-      <div className="flex items-center gap-3 overflow-x-auto pb-2 justify-start sm:justify-center">
-        <span className="text-xs font-bold text-slate-400 uppercase tracking-wider shrink-0">Categories:</span>
-        {categories.map((cat) => (
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
+        {/* Category Filter */}
+        <div className="flex flex-wrap gap-3 mb-12 justify-center">
           <Link
-            key={cat.id}
-            href={`/products/${cat.slug}`}
-            className="px-4 py-2 rounded-xl bg-slate-900 border border-slate-800 hover:border-emerald-500/40 text-slate-200 text-xs font-semibold shrink-0 transition-all"
+            href="/products"
+            className={`px-5 py-2.5 rounded-full text-sm font-semibold transition-colors ${
+              !searchParams.category || searchParams.category === 'all'
+                ? 'bg-primary text-white shadow-md'
+                : 'bg-white border border-slate-200 text-slate-600 hover:border-primary/50 hover:text-primary'
+            }`}
           >
-            {cat.name} ({cat._count.products})
+            All Products
           </Link>
-        ))}
-      </div>
-
-      {/* Products Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-        {products.map((product) => {
-          let parsedImages: string[] = [];
-          try {
-            parsedImages = typeof product.images === 'string' ? JSON.parse(product.images) : product.images || [];
-          } catch {
-            parsedImages = [];
-          }
-          const firstImg = parsedImages[0] || 'https://images.unsplash.com/photo-1553062407-98eeb64c6a62?q=80&w=800&auto=format&fit=crop';
-
-          return (
-            <div
-              key={product.id}
-              className="bg-slate-900 border border-slate-800 rounded-3xl overflow-hidden flex flex-col justify-between hover:border-slate-700 transition-all group"
+          {categories.map((cat) => (
+            <Link
+              key={cat.slug}
+              href={`/products?category=${cat.slug}`}
+              className={`px-5 py-2.5 rounded-full text-sm font-semibold transition-colors ${
+                searchParams.category === cat.slug
+                  ? 'bg-primary text-white shadow-md'
+                  : 'bg-white border border-slate-200 text-slate-600 hover:border-primary/50 hover:text-primary'
+              }`}
             >
-              <div className="relative h-56 bg-slate-950 overflow-hidden">
-                <img
-                  src={firstImg}
-                  alt={product.name}
-                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                />
-                <div className="absolute top-4 left-4 flex gap-2">
-                  <span className="bg-slate-950/80 backdrop-blur-md text-emerald-400 text-[10px] font-bold px-3 py-1 rounded-full border border-emerald-500/20">
-                    {product.category?.name}
-                  </span>
-                </div>
-              </div>
+              {cat.name}
+            </Link>
+          ))}
+        </div>
 
-              <div className="p-6 flex-1 flex flex-col justify-between space-y-4">
-                <div>
-                  <h2 className="font-extrabold text-white text-lg tracking-tight">{product.name}</h2>
-                  <p className="text-xs text-slate-400 line-clamp-3 mt-2">{product.description}</p>
-                </div>
-
-                <div className="grid grid-cols-2 gap-2 pt-3 border-t border-slate-800 text-xs">
-                  <div>
-                    <span className="text-[10px] text-slate-500 uppercase font-bold block">Estimated MOQ</span>
-                    <span className="font-semibold text-slate-200">{product.moq || 'N/A'}</span>
-                  </div>
-                  <div>
-                    <span className="text-[10px] text-slate-500 uppercase font-bold block">Est. Unit Price</span>
-                    <span className="font-semibold text-emerald-400">{product.estPriceRange || 'Contact'}</span>
-                  </div>
-                </div>
-
-                <Link
-                  href={`/contact?product=${encodeURIComponent(product.name)}`}
-                  className="w-full py-3 rounded-xl bg-slate-800 hover:bg-emerald-500 hover:text-slate-950 text-emerald-400 font-extrabold text-xs text-center transition-all flex items-center justify-center gap-2"
-                >
-                  <Send className="w-3.5 h-3.5" />
-                  <span>Request Sourcing For This Item</span>
-                </Link>
-              </div>
-            </div>
-          );
-        })}
-      </div>
-
-      {/* Can't Find Product Banner */}
-      <div className="bg-slate-900 border border-slate-800 rounded-3xl p-8 sm:p-12 text-center space-y-6 max-w-4xl mx-auto">
-        <h2 className="text-2xl sm:text-3xl font-extrabold text-white">Can't Find Your Product?</h2>
-        <p className="text-xs sm:text-sm text-slate-300 max-w-xl mx-auto">
-          We source customized products, unique catalog items, and specialty goods across Chinese manufacturing hubs.
-        </p>
-        <Link
-          href="/contact"
-          className="inline-flex items-center gap-2 px-8 py-4 rounded-2xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-extrabold text-sm shadow-xl shadow-emerald-500/20"
-        >
-          <Send className="w-4 h-4" />
-          <span>Ask About Another Product</span>
-        </Link>
+        {/* Product Grid */}
+        {products.length > 0 ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+              {products.map((product: any) => (
+              <ProductCard
+                key={product._id}
+                product={JSON.parse(JSON.stringify(product))}
+                categoryLabel={categories.find((category) => category.slug === product.category)?.name || product.category}
+              />
+            ))}
+          </div>
+        ) : (
+          <div className="text-center py-32 bg-white rounded-3xl border border-slate-200 shadow-sm">
+            <h3 className="text-xl font-bold text-slate-900 mb-2 font-heading">No Products Found</h3>
+            <p className="text-slate-500">There are currently no products available in this category.</p>
+            <Link href="/products" className="btn-primary mt-6">
+              View All Categories
+            </Link>
+          </div>
+        )}
       </div>
     </div>
   );

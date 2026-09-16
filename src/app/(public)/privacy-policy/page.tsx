@@ -1,41 +1,38 @@
 import React from 'react';
+import { getPolicyPageBySlug } from '@/lib/policy-pages';
 
-export default function PrivacyPolicyPage() {
+const fallbackPrivacy = `
+  <h2>1. Information We Collect</h2>
+  <p>We collect your name, email, phone number, company details, product requirements, and any information needed to evaluate a sourcing request.</p>
+  <h2>2. How We Use Your Data</h2>
+  <p>Your information is used to assess feasibility, coordinate supplier communication, prepare quotations, and manage client project requests.</p>
+  <h2>3. Confidentiality</h2>
+  <p>We keep client information confidential and do not sell or share personal information with unrelated third parties.</p>
+  <h2>4. Contact</h2>
+  <p>If you have questions about privacy, contact our team through the website contact page or the email listed in the contact section.</p>
+`;
+
+export default async function PrivacyPolicyPage() {
+  const policy = await getPolicyPageBySlug('privacy-policy');
+  const title = policy?.title || 'Privacy Policy';
+  const summary = policy?.summary || 'Last updated: September 2026';
+  const content = policy?.content || fallbackPrivacy;
+
   return (
-    <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12 space-y-8 font-sans">
-      <div className="space-y-3">
-        <h1 className="text-3xl sm:text-4xl font-black text-white tracking-tight">Privacy Policy</h1>
-        <p className="text-xs text-slate-400">Last updated: September 2026</p>
-      </div>
+    <div className="mx-auto max-w-5xl px-4 py-16 sm:px-6 lg:px-8">
+      <div className="overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-[0_10px_40px_rgba(15,23,42,0.05)]">
+        <div className="border-b border-slate-200 bg-slate-50 px-6 py-8 sm:px-10">
+          <span className="inline-flex rounded-full border border-slate-200 bg-white px-3 py-1 text-[10px] font-bold uppercase tracking-[0.24em] text-slate-600">
+            Policy
+          </span>
+          <h1 className="mt-4 text-3xl font-black tracking-tight text-slate-900 sm:text-4xl">{title}</h1>
+          <p className="mt-3 text-sm text-slate-600">{summary}</p>
+        </div>
 
-      <div className="bg-slate-900 border border-slate-800 rounded-3xl p-8 text-xs text-slate-300 space-y-6 leading-relaxed">
-        <section className="space-y-2">
-          <h2 className="text-sm font-bold text-white uppercase tracking-wider">1. Information We Collect</h2>
-          <p>
-            When you submit a sourcing enquiry form on Source by Zahid, we collect contact information including your full name, company name, email address, WhatsApp number, destination country, product specifications, budget, and attached files.
-          </p>
-        </section>
-
-        <section className="space-y-2">
-          <h2 className="text-sm font-bold text-white uppercase tracking-wider">2. How We Use Your Data</h2>
-          <p>
-            Your information is used solely to evaluate sourcing feasibility, communicate with Chinese suppliers on your behalf, provide service quotes, and manage your procurement project.
-          </p>
-        </section>
-
-        <section className="space-y-2">
-          <h2 className="text-sm font-bold text-white uppercase tracking-wider">3. Confidentiality & Non-Disclosure</h2>
-          <p>
-            We treat your product designs, proprietary drawings, and commercial parameters with strict confidentiality. We do not sell or share your personal contact details with third-party marketers.
-          </p>
-        </section>
-
-        <section className="space-y-2">
-          <h2 className="text-sm font-bold text-white uppercase tracking-wider">4. Contact Us</h2>
-          <p>
-            If you have questions regarding your data privacy, contact us at contact@sourcebyzahid.com or via WhatsApp at +86 197 1202 0155.
-          </p>
-        </section>
+        <div
+          className="space-y-6 px-6 py-8 text-base leading-8 text-slate-700 sm:px-10 [&_h2]:mt-8 [&_h2]:text-2xl [&_h2]:font-black [&_h2]:tracking-tight [&_h2]:text-slate-900 [&_h3]:mt-6 [&_h3]:text-lg [&_h3]:font-bold [&_h3]:text-slate-800 [&_p]:mt-3 [&_ul]:mt-3 [&_ul]:list-disc [&_ul]:space-y-2 [&_ul]:pl-6 [&_ol]:mt-3 [&_ol]:list-decimal [&_ol]:space-y-2 [&_ol]:pl-6 [&_li]:leading-7 [&_strong]:font-bold [&_strong]:text-slate-900"
+          dangerouslySetInnerHTML={{ __html: content }}
+        />
       </div>
     </div>
   );

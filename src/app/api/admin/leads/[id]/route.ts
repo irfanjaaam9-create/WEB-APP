@@ -1,88 +1,64 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { prisma } from '@/lib/prisma';
-import { checkAdminAuth, unauthorizedResponse } from '@/lib/auth';
+import Inquiry from '@/models/Inquiry';
+import { connectDB } from '@/lib/mongodb';
+import { getSession } from '@/lib/session';
 
-export async function GET(
-  req: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
-  const admin = await checkAdminAuth(req);
-  if (!admin) return unauthorizedResponse();
+async function isAdmin() {
+  const session = await getSession();
+  return session?.role === 'admin';
+}
 
+function mapLead(inquiry: any) {
+  const id = inquiry._id.toString();
+  return {
+    ...inquiry,
+    id,
+    leadId: `INQ-${id.slice(-8).toUpperCase()}`,
+    companyName: inquiry.company || '',
+    whatsApp: inquiry.phone || '',
+    country: '',
+    productName: inquiry.productRef || '',
+    serviceRequired: 'Supplier Research',
+    status: String(inquiry.status || 'new').toUpperCase(),
+    internalNotes: [],
+  };
+}
+
+export async function GET(_request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  if (!(await isAdmin())) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  await connectDB();
   const { id } = await params;
-  const lead = await prisma.lead.findUnique({
-    where: { id },
-    include: { internalNotes: { orderBy: { createdAt: 'desc' } } },
-  });
-
-  if (!lead) {
-    return NextResponse.json({ error: 'Lead not found' }, { status: 404 });
-  }
-
-  return NextResponse.json({ success: true, lead });
+  const inquiry = await Inquiry.findById(id).lean();
+  if (!inquiry) return NextResponse.json({ error: 'Lead not found' }, { status: 404 });
+  return NextResponse.json({ lead: mapLead(inquiry) });
 }
 
-export async function PATCH(
-  req: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
-  const admin = await checkAdminAuth(req);
-  if (!admin) return unauthorizedResponse();
-
-  try {
-    const { id } = await params;
-    const body = await req.json();
-    const { status, noteContent } = body;
-
-    const lead = await prisma.lead.findUnique({ where: { id } });
-    if (!lead) {
-      return NextResponse.json({ error: 'Lead not found' }, { status: 404 });
-    }
-
-    // Update lead status if provided
-    const updatedLead = await prisma.lead.update({
-      where: { id },
-      data: {
-        status: status || lead.status,
-      },
-    });
-
-    // Add internal note if provided
-    if (noteContent && noteContent.trim()) {
-      await prisma.leadNote.create({
-        data: {
-          leadId: id,
-          content: noteContent.trim(),
-          author: admin.name || 'Admin',
-        },
-      });
-    }
-
-    const fullLead = await prisma.lead.findUnique({
-      where: { id },
-      include: { internalNotes: { orderBy: { createdAt: 'desc' } } },
-    });
-
-    return NextResponse.json({ success: true, lead: fullLead });
-  } catch (error: any) {
-    console.error('Error updating lead:', error);
-    return NextResponse.json({ error: error.message || 'Failed to update lead' }, { status: 500 });
-  }
+export async function PATCH(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  if (!(await isAdmin())) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  await connectDB();
+  const { id } = await params;
+  const body = await request.json();
+  const statusMap: Record<string, 'new' | 'contacted' | 'resolved'> = {
+    NEW: 'new',
+    CONTACTED: 'contacted',
+    QUALIFIED: 'contacted',
+    PROPOSAL_SENT: 'contacted',
+    PAYMENT_PENDING: 'contacted',
+    IN_PROGRESS: 'contacted',
+    COMPLETED: 'resolved',
+    NOT_QUALIFIED: 'resolved',
+    CLOSED: 'resolved',
+  };
+  const inquiry = await Inquiry.findByIdAndUpdate(id, { status: statusMap[String(body.status)] || 'new' }, { new: true }).lean();
+  if (!inquiry) return NextResponse.json({ error: 'Lead not found' }, { status: 404 });
+  return NextResponse.json({ lead: mapLead(inquiry) });
 }
 
-export async function DELETE(
-  req: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
-  const admin = await checkAdminAuth(req);
-  if (!admin) return unauthorizedResponse();
-
-  try {
-    const { id } = await params;
-    await prisma.lead.delete({ where: { id } });
-    return NextResponse.json({ success: true, message: 'Lead deleted' });
-  } catch (error: any) {
-    console.error('Error deleting lead:', error);
-    return NextResponse.json({ error: error.message || 'Failed to delete lead' }, { status: 500 });
-  }
+export async function DELETE(_request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  if (!(await isAdmin())) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  await connectDB();
+  const { id } = await params;
+  const result = await Inquiry.findByIdAndDelete(id);
+  if (!result) return NextResponse.json({ error: 'Lead not found' }, { status: 404 });
+  return NextResponse.json({ success: true });
 }
