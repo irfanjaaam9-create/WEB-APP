@@ -50,6 +50,7 @@ export async function POST(request: NextRequest) {
   if (site.machineryCategories.some((category: any) => category.slug === slug)) return NextResponse.json({ error: 'Category already exists' }, { status: 409 });
   const category = { id: crypto.randomUUID(), name, slug, overview: String(body.overview || '').trim(), featuredImage: String(body.featuredImage || '').trim() };
   site.machineryCategories.push(category);
+  site.markModified('machineryCategories');
   await site.save();
   return NextResponse.json({ success: true, category });
 }
@@ -65,6 +66,8 @@ export async function PUT(request: NextRequest) {
   const updated = { ...site.machineryCategories[index], name: String(body.name || '').trim(), slug: slugify(String(body.name || '')), overview: String(body.overview || '').trim(), featuredImage: String(body.featuredImage || '').trim() };
   site.machineryCategories[index] = updated;
   if (oldId !== updated.id) site.machineryCatalog.forEach((machine: any) => { if (machine.categoryId === oldId) machine.categoryId = updated.id; });
+  site.markModified('machineryCategories');
+  site.markModified('machineryCatalog');
   await site.save();
   return NextResponse.json({ success: true, category: updated });
 }
@@ -79,6 +82,7 @@ export async function DELETE(request: NextRequest) {
   const before = site.machineryCategories.length;
   site.machineryCategories = site.machineryCategories.filter((category: any) => category.id !== id);
   if (before === site.machineryCategories.length) return NextResponse.json({ error: 'Category not found' }, { status: 404 });
+  site.markModified('machineryCategories');
   await site.save();
   return NextResponse.json({ success: true });
 }

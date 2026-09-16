@@ -128,6 +128,7 @@ export async function POST(request: NextRequest) {
       if (resource === 'blog') {
         if (!body.title || !body.content) return NextResponse.json({ error: 'Title and content are required' }, { status: 400 });
         settings.blogPosts.push({ id: crypto.randomUUID(), ...body, publishedAt: new Date() });
+        settings.markModified('blogPosts');
         await settings.save();
         return NextResponse.json({ success: true });
       }
@@ -136,10 +137,12 @@ export async function POST(request: NextRequest) {
         const categoryExists = (settings.machineryCategories || []).some((category: any) => String(category.id) === String(body.categoryId));
         if (!categoryExists) return NextResponse.json({ error: 'Machinery category not found' }, { status: 400 });
         settings.machineryCatalog.push({ id: crypto.randomUUID(), ...body, categoryId: String(body.categoryId) });
+        settings.markModified('machineryCatalog');
         await settings.save();
         return NextResponse.json({ success: true });
       }
       settings.servicePackages.push({ id: crypto.randomUUID(), ...body });
+      settings.markModified('servicePackages');
       await settings.save();
       return NextResponse.json({ success: true });
     }
@@ -185,6 +188,7 @@ export async function PUT(request: NextRequest) {
       const currentId = idFor(items[index]);
       items[index] = { ...items[index], ...body, id: currentId || body.id || crypto.randomUUID(), categoryId: body.categoryId ? String(body.categoryId) : items[index].categoryId };
       settings[collections[resource]] = items;
+      settings.markModified(collections[resource]);
       await settings.save();
       return NextResponse.json({ success: true, item: serialize(items[index]) });
     }
@@ -229,6 +233,7 @@ export async function DELETE(request: NextRequest) {
     const nextItems = items.filter((item: any) => !matchesId(item, id));
     if (nextItems.length === items.length) return NextResponse.json({ error: 'Item not found' }, { status: 404 });
     settings[collections[resource]] = nextItems;
+    settings.markModified(collections[resource]);
     await settings.save();
     return NextResponse.json({ success: true });
   } catch (error: unknown) {
