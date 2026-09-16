@@ -7,13 +7,9 @@ interface PublicFooterProps {
 }
 
 export default function PublicFooter({ settings }: PublicFooterProps) {
-  const footerLinks = settings?.footerLinks && settings.footerLinks.length > 0
-    ? settings.footerLinks
-    : [
-        { label: 'Terms', href: '/terms' },
-        { label: 'Privacy Policy', href: '/privacy-policy' },
-        { label: 'Refund Policy', href: '/refund-policy' },
-      ];
+  const configuredLinks = settings?.footerLinks && settings.footerLinks.length > 0 ? settings.footerLinks : [];
+  const policyLinks = (settings?.policyPages || []).map((policy: any) => ({ label: policy.title, href: `/${policy.slug}` }));
+  const footerLinks = [...configuredLinks, ...policyLinks.filter((policy: any) => !configuredLinks.some((link: any) => link.href === policy.href))];
 
   return (
     <footer className="border-t border-stone-200 bg-stone-950 text-stone-300">

@@ -40,16 +40,15 @@ const UserSchema = new Schema<IUser>(
   { timestamps: true }
 );
 
-UserSchema.pre('save', async function (next: any) {
-  if (!this.isModified('password')) return next();
+UserSchema.pre('save', async function () {
+  if (!this.isModified('password')) return;
 
   const plainPassword = String(this.password || '');
   if (!plainPassword) {
-    return next(new Error('Password is required'));
+    throw new Error('Password is required');
   }
 
   this.password = await bcrypt.hash(plainPassword, 12);
-  next();
 });
 
 UserSchema.methods.comparePassword = async function (candidate: string): Promise<boolean> {
