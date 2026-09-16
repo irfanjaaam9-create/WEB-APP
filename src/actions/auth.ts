@@ -87,6 +87,44 @@ export async function changeAdminPassword(prevState, formData) {
   }
 }
 
+export async function updateAdminAccount(prevState, formData) {
+  const email = String(formData.get('email') || '').trim().toLowerCase();
+  const name = String(formData.get('name') || '').trim();
+  const currentPassword = String(formData.get('currentPassword') || '');
+  const newPassword = String(formData.get('newPassword') || '');
+  const confirmPassword = String(formData.get('confirmPassword') || '');
+  const csrfToken = String(formData.get('csrfToken') || '');
+
+  if (!(await validateCsrfToken(csrfToken))) return { success: false, error: 'Security validation failed. Please refresh the page.' };
+  if (!email || !/^\S+@\S+\.\S+$/.test(email) || !name || !currentPassword) {
+    return { success: false, error: 'Name, valid email, and current password are required.' };
+  }
+  if (newPassword && newPassword.length < 8) return { success: false, error: 'New password must be at least 8 characters long.' };
+  if (newPassword !== confirmPassword) return { success: false, error: 'New password and confirmation do not match.' };
+
+  const session = await getSession();
+  if (!session?.userId) return { success: false, error: 'You must be logged in to update the admin account.' };
+
+  try {
+    await connectDB();
+    const user = await User.findById(session.userId).select('+password');
+    if (!user) return { success: false, error: 'Admin account not found.' };
+    if (!(await user.comparePassword(currentPassword))) return { success: false, error: 'Current password is incorrect.' };
+
+    const duplicate = await User.findOne({ email, _id: { $ne: user._id } });
+    if (duplicate) return { success: false, error: 'That email is already in use.' };
+
+    user.email = email;
+    user.name = name;
+    if (newPassword) user.password = newPassword;
+    await user.save();
+    return { success: true, message: 'Admin account updated successfully.' };
+  } catch (error) {
+    console.error('Admin account update error:', error);
+    return { success: false, error: 'Unable to update the admin account.' };
+  }
+}
+
 export async function logoutAdmin(formData) {
   const csrfToken = formData instanceof FormData ? String(formData.get('csrfToken') || '') : formData?.csrfToken || '';
   const isValidCsrf = await validateCsrfToken(csrfToken);

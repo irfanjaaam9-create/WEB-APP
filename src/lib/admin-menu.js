@@ -10,7 +10,6 @@ import {
   Wrench,
   Newspaper,
   CircleHelp,
-  Users,
 } from 'lucide-react';
 
 export const adminNavItems = [
@@ -21,7 +20,6 @@ export const adminNavItems = [
   { name: 'Machinery', href: '/admin/machinery', icon: Wrench },
   { name: 'Policies', href: '/admin/policies', icon: FileText },
   { name: 'Inquiries', href: '/admin/inquiries', icon: MessageSquare },
-  { name: 'Leads', href: '/admin/leads', icon: Users },
   { name: 'Blog', href: '/admin/blog', icon: Newspaper },
   { name: 'FAQs', href: '/admin/faqs', icon: CircleHelp },
   { name: 'Media', href: '/admin/media', icon: ImageIcon },
@@ -30,4 +28,4 @@ export const adminNavItems = [
   { name: 'Site Settings', href: '/admin/settings', icon: Settings },
 ];
 
-export const uploadFolders = ['zoytech', 'products', 'cases', 'settings', 'media', 'machinery'];
+export const uploadFolders = ['zoytech', 'products', 'cases', 'settings', 'media', 'machinery', 'site'];

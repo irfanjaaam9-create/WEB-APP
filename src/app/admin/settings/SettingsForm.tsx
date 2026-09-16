@@ -291,7 +291,8 @@ export default function SettingsForm({ initialData }: SettingsFormProps) {
       {/* Hero Carousel */}
       <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm space-y-6">
         <div className="flex items-center justify-between border-b border-slate-100 pb-4 mb-4">
-          <h2 className="text-xl font-bold font-heading">Homepage Hero Carousel</h2>
+          <h2 className="text-xl font-bold font-heading">Homepage Hero & Footer Slider</h2>
+          <p className="text-sm text-slate-500">These slides control the main homepage hero and the compact slider shown immediately above the footer.</p>
           <label className="btn-primary text-sm h-10 px-4 cursor-pointer inline-flex items-center gap-2">
             {isUploadingSlide ? <Loader2 className="w-4 h-4 animate-spin" /> : <Plus className="w-4 h-4" />}
             {isUploadingSlide ? 'Uploading...' : 'Add Slide Image'}

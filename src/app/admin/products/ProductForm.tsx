@@ -2,6 +2,7 @@
 
 import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 import { createProduct, updateProduct } from '@/actions/products';
 import { Upload, X, Plus, Loader2 } from 'lucide-react';
 import { ensureCsrfToken } from '@/lib/csrf';
@@ -13,6 +14,8 @@ interface ProductFormProps {
 export default function ProductForm({ initialData }: ProductFormProps) {
   const router = useRouter();
   const [categories, setCategories] = useState<{ id: string; name: string; slug: string }[]>([]);
+  const [category, setCategory] = useState(initialData?.category || '');
+  const [categoriesLoading, setCategoriesLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState('');
   const [csrfToken, setCsrfToken] = useState('');
@@ -34,8 +37,14 @@ export default function ProductForm({ initialData }: ProductFormProps) {
     setCsrfToken(ensureCsrfToken());
     fetch('/api/admin/categories')
       .then((response) => response.json())
-      .then((data) => setCategories(data.categories || []))
-      .catch(() => setCategories([]));
+      .then((data) => {
+        setCategories(data.categories || []);
+        if (data.categories?.length && !category && !initialData?.category) {
+          setCategory(data.categories[0].slug);
+        }
+      })
+      .catch(() => setCategories([]))
+      .finally(() => setCategoriesLoading(false));
   }, []);
 
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -125,11 +134,15 @@ export default function ProductForm({ initialData }: ProductFormProps) {
                 <input name="slug" defaultValue={initialData?.slug} className="admin-input" placeholder="e.g. psa-oxygen-generator-10l" />
               </div>
               <div>
-                <label className="admin-label mb-2 block">Category *</label>
-                <select name="category" required defaultValue={initialData?.category || ''} className="admin-input">
+                <div className="flex items-center justify-between mb-2">
+                  <label className="admin-label">Category *</label>
+                  <Link href="/admin/categories" className="text-xs font-semibold text-primary hover:underline">Manage categories</Link>
+                </div>
+                <select name="category" required value={category} onChange={(event) => setCategory(event.target.value)} disabled={categoriesLoading || categories.length === 0} className="admin-input disabled:opacity-60">
                   <option value="" disabled>Select a category</option>
                   {categories.map((category) => <option key={category.id} value={category.slug}>{category.name}</option>)}
                 </select>
+                {!categoriesLoading && categories.length === 0 && <p className="mt-2 text-xs text-red-600">No categories found. Add a category first.</p>}
               </div>
             </div>
 
