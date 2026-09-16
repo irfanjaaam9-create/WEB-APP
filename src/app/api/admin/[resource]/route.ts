@@ -28,11 +28,14 @@ async function getSettings() {
 }
 
 function idFor(item: any) {
-  return String(item?.id || item?._id || `${Date.now()}-${Math.random().toString(16).slice(2)}`);
+  const raw = item?.id ?? item?._id;
+  if (raw == null || raw === '') return '';
+  return String(raw);
 }
 
 function serialize(item: any) {
-  return { ...item, id: idFor(item) };
+  const id = idFor(item);
+  return id ? { ...item, id } : { ...item };
 }
 
 function mapLead(inquiry: any) {
@@ -163,9 +166,11 @@ export async function PUT(request: NextRequest) {
     const collections: Record<string, string> = { blog: 'blogPosts', machinery: 'machineryCatalog', services: 'servicePackages' };
     if (resource && collections[resource]) {
       const items = settings[collections[resource]] || [];
-      const index = items.findIndex((item: any) => idFor(item) === String(body.id));
+      const targetId = String(body.id ?? '');
+      const index = items.findIndex((item: any) => idFor(item) === targetId);
       if (index < 0) return NextResponse.json({ error: 'Item not found' }, { status: 404 });
-      items[index] = { ...items[index], ...body, id: idFor(items[index]) };
+      const currentId = idFor(items[index]);
+      items[index] = { ...items[index], ...body, id: currentId || body.id || crypto.randomUUID() };
       settings[collections[resource]] = items;
       await settings.save();
       return NextResponse.json({ success: true, item: serialize(items[index]) });
@@ -208,7 +213,7 @@ export async function DELETE(request: NextRequest) {
     const collections: Record<string, string> = { blog: 'blogPosts', machinery: 'machineryCatalog', services: 'servicePackages' };
     if (!resource || !collections[resource]) return NextResponse.json({ error: 'Unsupported admin resource' }, { status: 400 });
     const items = settings[collections[resource]] || [];
-    const nextItems = items.filter((item: any) => idFor(item) !== id);
+    const nextItems = items.filter((item: any) => idFor(item) !== id && String(item?.id ?? item?._id ?? '') !== id);
     if (nextItems.length === items.length) return NextResponse.json({ error: 'Item not found' }, { status: 404 });
     settings[collections[resource]] = nextItems;
     await settings.save();
